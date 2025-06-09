@@ -1,3 +1,4 @@
+import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/onboardingScreen.dart';
 import 'package:chat_bot/routes/routers.dart';
 import 'package:flutter/material.dart';
@@ -37,13 +38,13 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'ChatBot',
+        title: 'Sita AI',
         debugShowCheckedModeBanner: false,
         navigatorKey: routeGlobalKey,
        theme: ThemeData(
       textTheme: GoogleFonts.interTextTheme(),
         ),
-        initialRoute: Onboardingscreen.route,
+        initialRoute: Chatbot.route,
         onGenerateRoute: Routers.generateRoute,
       );
     

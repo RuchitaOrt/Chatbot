@@ -1,11 +1,19 @@
+import 'dart:convert';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
 import 'package:translator/translator.dart';
 
+import 'SingleLanguage.dart';
+
 class Chatbot extends StatefulWidget {
   const Chatbot({super.key});
+
   static const String route = "/chatBot";
 
   @override
@@ -37,10 +45,10 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     )..repeat(reverse: true);
-
     _micGlowAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+
   }
 
   @override
@@ -54,7 +62,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
 
   Future<void> speak(String text, String langCode) async {
     await flutterTts.setLanguage(langCode);
-    await flutterTts.speak(text);
+     await flutterTts.speak(text);
   }
 
   Future<void> sendMessage(String userInput) async {
@@ -64,7 +72,6 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     setState(() {
       messages.add({"message": userInput, "isUser": "true", "time": time});
     });
-
     // Detect language
     _detectedLang = await languageIdentifier.identifyLanguage(userInput);
     print("Detected language: $_detectedLang");
@@ -80,7 +87,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
 
     final responseTime = TimeOfDay.now().format(context);
     setState(() {
-      messages.add({"message": botResponse, "isUser": "false", "time": responseTime});
+      messages.add(
+          {"message": botResponse, "isUser": "false", "time": responseTime});
     });
 
     await speak(botResponse, _detectedLang);
@@ -89,16 +97,25 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   String getBotResponse(String userMessage) {
     final answers = {
       "hi": "Hello! Welcome to the airport. How can I assist you today?",
-      "hello": "Hi there! Need help with your flight or airport services?",
-      "flight status": "Please provide your flight number or destination to check the status.",
-      "where is gate": "Please tell me your gate number or airline, and I'll guide you.",
-      "baggage claim": "The baggage claim area is located near the arrivals section. Do you need directions?",
-      "lost luggage": "I'm sorry to hear that. Please contact the airline's lost baggage desk in Terminal 1.",
-      "security check": "Security checks are at the entrance of all terminals. Please have your ID and boarding pass ready.",
-      "wifi": "Free WiFi is available throughout the airport. Just connect to 'Airport_Free_WiFi' and follow the instructions.",
-      "restaurants": "There are several restaurants and cafes in the terminal. Would you like recommendations?",
-      "parking": "Short-term and long-term parking are available. Do you need directions or rates?",
-      "taxi": "Taxi stands are located outside the arrivals exit. Need help booking a ride?",
+      "hello": "आप कैसे हो? आवर सब ठीक है?",
+      "flight status":
+          "Please provide your flight number or destination to check the status.",
+      "where is gate":
+          "Please tell me your gate number or airline, and I'll guide you.",
+      "baggage claim":
+          "The baggage claim area is located near the arrivals section. Do you need directions?",
+      "lost luggage":
+          "I'm sorry to hear that. Please contact the airline's lost baggage desk in Terminal 1.",
+      "security check":
+          "Security checks are at the entrance of all terminals. Please have your ID and boarding pass ready.",
+      "wifi":
+          "Free WiFi is available throughout the airport. Just connect to 'Airport_Free_WiFi' and follow the instructions.",
+      "restaurants":
+          "There are several restaurants and cafes in the terminal. Would you like recommendations?",
+      "parking":
+          "Short-term and long-term parking are available. Do you need directions or rates?",
+      "taxi":
+          "Taxi stands are located outside the arrivals exit. Need help booking a ride?",
       "thank you": "You're welcome! Have a pleasant journey!",
       "bye": "Goodbye! Safe travels!",
     };
@@ -165,7 +182,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       backgroundColor: const Color(0xFFEAF5F5),
       appBar: AppBar(
         backgroundColor: Colors.teal[100],
-        title: const Text("Chatbot", style: TextStyle(color: Colors.black)),
+        title: const Text("Sita AI", style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
       body: Column(
@@ -177,7 +194,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
               itemBuilder: (context, index) {
                 final msg = messages[index];
                 final isUser = msg["isUser"] == "true";
-                return chatBubble(msg["message"]!, isUser: isUser, time: msg["time"]!);
+                return chatBubble(msg["message"]!,
+                    isUser: isUser, time: msg["time"]!);
               },
             ),
           ),
@@ -186,7 +204,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
                 "Listening...",
-                style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.red[700], fontWeight: FontWeight.bold),
               ),
             ),
           Container(
@@ -197,7 +216,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: const InputDecoration.collapsed(hintText: "Speak or type..."),
+                    decoration: const InputDecoration.collapsed(
+                        hintText: "Speak or type..."),
                   ),
                 ),
                 GestureDetector(
@@ -229,7 +249,10 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                   onPressed: () {
                     final text = _controller.text.trim();
                     if (text.isNotEmpty) {
-                      sendMessage(text);
+                      // sendMessage(text);
+                      // _controller.clear();
+                      // _hasSentSpeechResult = true;
+                      detectLanguage(text);
                       _controller.clear();
                       _hasSentSpeechResult = true;
                     }
@@ -243,12 +266,15 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget chatBubble(String message, {required bool isUser, required String time}) {
+  Widget chatBubble(String message,
+      {required bool isUser, required String time}) {
     return Column(
-      crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment:
+          isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+          mainAxisAlignment:
+              isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
           children: [
             Flexible(
               child: Container(
@@ -258,7 +284,15 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                   color: isUser ? Colors.teal[50] : Colors.grey[300],
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(message),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!isUser)
+                    const Icon(Icons.support_agent_rounded),
+                    Text(message)
+                  ],
+                ),
               ),
             ),
             if (!isUser)
@@ -270,9 +304,82 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text(time, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+          child: Text(time,
+              style: const TextStyle(fontSize: 10, color: Colors.grey)),
         ),
       ],
     );
   }
+  Future<void> detectLanguage(String inputText) async {
+
+    // Check internet connection
+    var connectivityResult = await Connectivity().checkConnectivity();
+
+    if (connectivityResult == ConnectivityResult.none) {
+      Fluttertoast.showToast(
+        msg: "No internet connection",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+      return;
+    }
+
+    final url = Uri.parse('https://smarkerz-webscrap.onerooftechnologiesllp.com/detect-language');
+    final headers = {
+      'Content-Type': 'application/json',
+    };
+
+    final body = jsonEncode({
+      'text': inputText,
+    });
+
+    try {
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: body,
+      );
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print('Language Detection Response: $responseData');
+        final decoded = jsonDecode(response.body);
+        // final Map<String, dynamic> decodedJson = jsonDecode(responseData);
+        List<SingleLanguage> languages = parseSingleLanguageList(decoded);
+
+        final time = TimeOfDay.now().format(context);
+        setState(() {
+          messages.add({"message": languages.first.nativelanguage, "isUser": "true", "time": '$time ${languages.first.languageName}'});
+        });
+        // ✅ Delay 5 seconds before updating UI
+        await Future.delayed(Duration(seconds: 5));
+        setState(() {
+          messages.add({"message": languages.first.convertIntoOriginalLanguage, "isUser": "false", "time": '$time ${languages.first.languageName}'});
+        });
+      } else {
+        print('Failed with status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        Fluttertoast.showToast(
+          msg: 'Response body: ${response.body}',
+          toastLength: Toast.LENGTH_SHORT,
+        );
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+      Fluttertoast.showToast(
+        msg:'Error occurred: $e',
+        toastLength: Toast.LENGTH_SHORT,
+        // gravity: ToastGravity.BOTTOM,
+      );
+    }
+  }
+
+  List<SingleLanguage> parseSingleLanguageList(Map<String, dynamic> jsonResponse) {
+    final List<dynamic> dataList = jsonResponse['data'];
+    if (dataList.isNotEmpty) {
+      final singleLanguageList = dataList[0]['single_language'] as List<dynamic>;
+      return singleLanguageList.map((item) => SingleLanguage.fromJson(item)).toList();
+    }
+    return [];
+  }
+
 }
