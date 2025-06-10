@@ -4,7 +4,6 @@ import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/sizeConfig.dart';
 import 'package:flutter/material.dart';
 
-
 class SplashScreen extends StatefulWidget {
   static const String route = "/";
 
@@ -25,14 +24,11 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Utility().loadAPIConfig(context);
-     
+
     _controller = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat();
-
-
-   
 
     _startNavigationFallback();
   }
@@ -40,7 +36,6 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-  
     _controller.dispose();
     _navigationTimer?.cancel();
     super.dispose();
@@ -48,32 +43,28 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _startNavigationFallback() {
     _navigationTimer = Timer(const Duration(seconds: 5), () async {
-      
-        _navigateToFallback();
-      
+      _navigateToFallback();
     });
   }
 
   void _navigateToFallback() async {
-   
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) =>  Chatbot(),
+        builder: (_) => Chatbot(),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-     SizeConfig().init(context);
+    SizeConfig().init(context);
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-     
       body: Container(
-        width: SizeConfig.blockSizeHorizontal *100,
-        decoration:BoxDecoration(color: Color(0xff2b3e2b)),
+        width: SizeConfig.blockSizeHorizontal * 100,
+        decoration: BoxDecoration(color: Color(0xff2b3e2b)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -83,7 +74,6 @@ class _SplashScreenState extends State<SplashScreen>
               width: height / 6,
             ),
             const SizedBox(height: 10),
-           
           ],
         ),
       ),

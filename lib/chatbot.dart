@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
 import 'package:translator/translator.dart';
-
 import 'SingleLanguage.dart';
 
 class Chatbot extends StatefulWidget {
@@ -22,7 +21,9 @@ class Chatbot extends StatefulWidget {
 class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   final FlutterTts flutterTts = FlutterTts();
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode(); // Declare a FocusNode
   final stt.SpeechToText _speech = stt.SpeechToText();
+
   final languageIdentifier = LanguageIdentifier(confidenceThreshold: 0.5);
   final translator = GoogleTranslator();
 
@@ -39,97 +40,34 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    flutterTts.setSpeechRate(0.45);
-    _animationController = AnimationController(
+     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
-    )..repeat(reverse: true);
+    )
+      ..repeat(reverse: true);
     _micGlowAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-
+    initTts();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose(); // Clean up to avoid memory leaks
     _speech.stop();
     _animationController.dispose();
     languageIdentifier.close();
     _scrollController.dispose();
-
     super.dispose();
   }
 
   Future<void> speak(String text, String langCode) async {
     await flutterTts.setLanguage(langCode);
-     await flutterTts.speak(text);
-  }
-final ScrollController _scrollController = ScrollController();
-
-  Future<void> sendMessage(String userInput) async {
-    if (userInput.trim().isEmpty) return;
-
-    final time = TimeOfDay.now().format(context);
-    setState(() {
-      messages.add({"message": userInput, "isUser": "true", "time": time});
-    });
-    _scrollToBottom();
-    // Detect language
-    _detectedLang = await languageIdentifier.identifyLanguage(userInput);
-    print("Detected language: $_detectedLang");
-
-    // Get bot response in English
-    String botResponse = getBotResponse(userInput);
-
-    // Translate response if needed
-    if (_detectedLang != 'en') {
-      final translation = await translator.translate(botResponse, to: _detectedLang);
-      botResponse = translation.text;
-    }
-
-    final responseTime = TimeOfDay.now().format(context);
-    setState(() {
-      messages.add(
-          {"message": botResponse, "isUser": "false", "time": responseTime});
-    });
-_scrollToBottom();
-    await speak(botResponse, _detectedLang);
+    await flutterTts.speak(text);
   }
 
-  String getBotResponse(String userMessage) {
-    final answers = {
-      "hi": "Hello! Welcome to the airport. How can I assist you today?",
-      "hello": "आप कैसे हो? आवर सब ठीक है?",
-      "flight status":
-          "Please provide your flight number or destination to check the status.",
-      "where is gate":
-          "Please tell me your gate number or airline, and I'll guide you.",
-      "baggage claim":
-          "The baggage claim area is located near the arrivals section. Do you need directions?",
-      "lost luggage":
-          "I'm sorry to hear that. Please contact the airline's lost baggage desk in Terminal 1.",
-      "security check":
-          "Security checks are at the entrance of all terminals. Please have your ID and boarding pass ready.",
-      "wifi":
-          "Free WiFi is available throughout the airport. Just connect to 'Airport_Free_WiFi' and follow the instructions.",
-      "restaurants":
-          "There are several restaurants and cafes in the terminal. Would you like recommendations?",
-      "parking":
-          "Short-term and long-term parking are available. Do you need directions or rates?",
-      "taxi":
-          "Taxi stands are located outside the arrivals exit. Need help booking a ride?",
-      "thank you": "You're welcome! Have a pleasant journey!",
-      "bye": "Goodbye! Safe travels!",
-    };
-
-    for (final key in answers.keys) {
-      if (userMessage.toLowerCase().contains(key)) {
-        return answers[key]!;
-      }
-    }
-    return "I'm still learning. Try asking something else!";
-  }
+  final ScrollController _scrollController = ScrollController();
 
   Future<void> startListening() async {
     bool available = await _speech.initialize(
@@ -172,30 +110,32 @@ _scrollToBottom();
 
     final text = _recognizedSpeech.trim();
     if (text.isNotEmpty && !_hasSentSpeechResult) {
-      await sendMessage(text);
+      // await sendMessage(text);
       _hasSentSpeechResult = true;
       _recognizedSpeech = "";
       _controller.clear();
     }
   }
-void _scrollToBottom() {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
-  });
-}
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFEAF5F5),
       appBar: AppBar(
         backgroundColor: Colors.teal[100],
-        title: const Text("Sita AI", style: TextStyle(color: Colors.black)),
+        title: const Text("SITA AI", style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
       body: Column(
@@ -230,6 +170,7 @@ void _scrollToBottom() {
                 Expanded(
                   child: TextField(
                     controller: _controller,
+                    focusNode: _focusNode, // Assign the FocusNode
                     decoration: const InputDecoration.collapsed(
                         hintText: "Speak or type..."),
                   ),
@@ -284,11 +225,11 @@ void _scrollToBottom() {
       {required bool isUser, required String time}) {
     return Column(
       crossAxisAlignment:
-          isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment:
-              isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+          isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
           children: [
             Flexible(
               child: Container(
@@ -302,8 +243,7 @@ void _scrollToBottom() {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (!isUser)
-                    const Icon(Icons.support_agent_rounded),
+                    if (!isUser) const Icon(Icons.support_agent_rounded),
                     Text(message)
                   ],
                 ),
@@ -312,7 +252,12 @@ void _scrollToBottom() {
             if (!isUser)
               IconButton(
                 icon: const Icon(Icons.volume_up, size: 20),
-                onPressed: () => speak(message, _detectedLang),
+                // onPressed: () => speak(message, _detectedLang),
+                onPressed: () async {
+                  _detectedLang = await languageIdentifier.identifyLanguage(message);
+                  await flutterTts.stop();
+                  speakmessage(message, context);
+                },
               ),
           ],
         ),
@@ -324,11 +269,9 @@ void _scrollToBottom() {
       ],
     );
   }
+
   Future<void> detectLanguage(String inputText) async {
-
-    // Check internet connection
-    var connectivityResult = await Connectivity().checkConnectivity();
-
+     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Fluttertoast.showToast(
         msg: "No internet connection",
@@ -338,15 +281,16 @@ void _scrollToBottom() {
       return;
     }
 
-    final url = Uri.parse('https://smarkerz-webscrap.onerooftechnologiesllp.com/detect-language');
+    final url = Uri.parse(
+        'https://smarkerz-webscrap.onerooftechnologiesllp.com/detect-language');
     final headers = {
       'Content-Type': 'application/json',
     };
-    
+
     final body = jsonEncode({
       'text': inputText,
     });
-    
+
     try {
       final response = await http.post(
         url,
@@ -357,36 +301,33 @@ void _scrollToBottom() {
         final responseData = jsonDecode(response.body);
         print('Language Detection Response: $responseData');
         final decoded = jsonDecode(response.body);
-        // final Map<String, dynamic> decodedJson = jsonDecode(responseData);
         List<SingleLanguage> languages = parseSingleLanguageList(decoded);
-
         final time = TimeOfDay.now().format(context);
+        _detectedLang = languages.first.language;
         setState(() {
-          messages.add({"message": languages.first.nativelanguage, "isUser": "true", "time": '$time ${languages.first.languageName}'});
+          //USER
+          messages.add({
+            "message": languages.first.nativelanguage,
+            "isUser": "true",
+            "time": '$time ${languages.first.languageName}'
+          });
+        });
+        dismissKeyboard();
+        _scrollToBottom();
+        await Future.delayed(const Duration(seconds: 5));
+        final botReply = languages.first.convertIntoOriginalLanguage;
+        setState(() {
+          messages.add({
+            "message": botReply,
+            "isUser": "false",
+            "time": '$time ${languages.first.languageName}'
+          });
         });
         _scrollToBottom();
-        // ✅ Delay 5 seconds before updating UI
-        // await Future.delayed(Duration(seconds: 5));
-        // setState(() {
-        //   messages.add({"message": languages.first.convertIntoOriginalLanguage, "isUser": "false", "time": '$time ${languages.first.languageName}'});
-        // });
-        await Future.delayed(const Duration(seconds: 1));
-
-final botReply = languages.first.convertIntoOriginalLanguage;
-final botLang = await languageIdentifier.identifyLanguage(botReply); // 👈 detect language
-
-setState(() {
-  messages.add({
-    "message": botReply,
-    "isUser": "false",
-    "time": '$time ${languages.first.languageName}'
-  });
-});
-_scrollToBottom();
-
-// 🔊 Speak in detected language
-await speak(botReply, botLang);
+        // Speak in detected language
+        speakmessage(botReply, context);
         _scrollToBottom();
+        dismissKeyboard();
       } else {
         print('Failed with status code: ${response.statusCode}');
         print('Response body: ${response.body}');
@@ -398,20 +339,55 @@ await speak(botReply, botLang);
     } catch (e) {
       print('Error occurred: $e');
       Fluttertoast.showToast(
-        msg:'Error occurred: $e',
+        msg: 'Error occurred: $e',
         toastLength: Toast.LENGTH_SHORT,
-        // gravity: ToastGravity.BOTTOM,
       );
     }
   }
-  
-  List<SingleLanguage> parseSingleLanguageList(Map<String, dynamic> jsonResponse) {
+
+  List<SingleLanguage> parseSingleLanguageList(
+      Map<String, dynamic> jsonResponse) {
     final List<dynamic> dataList = jsonResponse['data'];
     if (dataList.isNotEmpty) {
-      final singleLanguageList = dataList[0]['single_language'] as List<dynamic>;
-      return singleLanguageList.map((item) => SingleLanguage.fromJson(item)).toList();
+      final singleLanguageList =
+      dataList[0]['single_language'] as List<dynamic>;
+      return singleLanguageList
+          .map((item) => SingleLanguage.fromJson(item))
+          .toList();
     }
     return [];
   }
- 
+
+  Future<void> initTts() async {
+    await flutterTts.setLanguage(_detectedLang);
+    await flutterTts.setPitch(1.0);
+    await flutterTts.setSpeechRate(0.5);
+  }
+  Future<void> speakmessage(String message, BuildContext context) async {
+    try {
+      // Check if TTS is available before speaking
+      var isAvailable = await flutterTts.isLanguageAvailable(_detectedLang);
+      if (!isAvailable) {
+        _showUnsupportedMessage(context);
+        return;
+      }
+      await flutterTts.speak(message);
+    } catch (e) {
+       _showUnsupportedMessage(context);
+    }
+  }
+
+  void _showUnsupportedMessage(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Device not supported for speech'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+  void dismissKeyboard() {
+    _focusNode.unfocus(); // Dismisses keyboard
+  }
+
+
 }
