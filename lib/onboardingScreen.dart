@@ -53,18 +53,18 @@ class _OnboardingscreenState extends State<Onboardingscreen> {
             ),
             child:  Text("Get started"),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(
-                routeGlobalKey.currentContext!,
-              ).pushNamed(AllLanguageChatbot.route);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal[100],
-              foregroundColor: Colors.black,
-            ),
-            child:  Text("Get started with all language"),
-          ),
+          // ElevatedButton(
+          //   onPressed: () {
+          //     Navigator.of(
+          //       routeGlobalKey.currentContext!,
+          //     ).pushNamed(AllLanguageChatbot.route);
+          //   },
+          //   style: ElevatedButton.styleFrom(
+          //     backgroundColor: Colors.teal[100],
+          //     foregroundColor: Colors.black,
+          //   ),
+          //   child:  Text("Get started with all language"),
+          // ),
         ],
       ),
     ));

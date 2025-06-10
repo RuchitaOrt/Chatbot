@@ -1,6 +1,7 @@
 import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/onboardingScreen.dart';
 import 'package:chat_bot/routes/routers.dart';
+import 'package:chat_bot/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -44,7 +45,7 @@ class _MyAppState extends State<MyApp> {
        theme: ThemeData(
       textTheme: GoogleFonts.interTextTheme(),
         ),
-        initialRoute: Chatbot.route,
+        initialRoute: SplashScreen.route,
         onGenerateRoute: Routers.generateRoute,
       );
     

@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -57,6 +56,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     _speech.stop();
     _animationController.dispose();
     languageIdentifier.close();
+    _scrollController.dispose();
+
     super.dispose();
   }
 
@@ -64,6 +65,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     await flutterTts.setLanguage(langCode);
      await flutterTts.speak(text);
   }
+final ScrollController _scrollController = ScrollController();
 
   Future<void> sendMessage(String userInput) async {
     if (userInput.trim().isEmpty) return;
@@ -72,6 +74,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     setState(() {
       messages.add({"message": userInput, "isUser": "true", "time": time});
     });
+    _scrollToBottom();
     // Detect language
     _detectedLang = await languageIdentifier.identifyLanguage(userInput);
     print("Detected language: $_detectedLang");
@@ -90,7 +93,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       messages.add(
           {"message": botResponse, "isUser": "false", "time": responseTime});
     });
-
+_scrollToBottom();
     await speak(botResponse, _detectedLang);
   }
 
@@ -175,7 +178,17 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       _controller.clear();
     }
   }
-
+void _scrollToBottom() {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  });
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,6 +202,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
         children: [
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.all(16),
               itemCount: messages.length,
               itemBuilder: (context, index) {
@@ -328,11 +342,11 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     final headers = {
       'Content-Type': 'application/json',
     };
-
+    
     final body = jsonEncode({
       'text': inputText,
     });
-
+    
     try {
       final response = await http.post(
         url,
@@ -350,11 +364,29 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
         setState(() {
           messages.add({"message": languages.first.nativelanguage, "isUser": "true", "time": '$time ${languages.first.languageName}'});
         });
+        _scrollToBottom();
         // ✅ Delay 5 seconds before updating UI
-        await Future.delayed(Duration(seconds: 5));
-        setState(() {
-          messages.add({"message": languages.first.convertIntoOriginalLanguage, "isUser": "false", "time": '$time ${languages.first.languageName}'});
-        });
+        // await Future.delayed(Duration(seconds: 5));
+        // setState(() {
+        //   messages.add({"message": languages.first.convertIntoOriginalLanguage, "isUser": "false", "time": '$time ${languages.first.languageName}'});
+        // });
+        await Future.delayed(const Duration(seconds: 1));
+
+final botReply = languages.first.convertIntoOriginalLanguage;
+final botLang = await languageIdentifier.identifyLanguage(botReply); // 👈 detect language
+
+setState(() {
+  messages.add({
+    "message": botReply,
+    "isUser": "false",
+    "time": '$time ${languages.first.languageName}'
+  });
+});
+_scrollToBottom();
+
+// 🔊 Speak in detected language
+await speak(botReply, botLang);
+        _scrollToBottom();
       } else {
         print('Failed with status code: ${response.statusCode}');
         print('Response body: ${response.body}');
@@ -372,7 +404,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       );
     }
   }
-
+  
   List<SingleLanguage> parseSingleLanguageList(Map<String, dynamic> jsonResponse) {
     final List<dynamic> dataList = jsonResponse['data'];
     if (dataList.isNotEmpty) {
@@ -381,5 +413,5 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     }
     return [];
   }
-
+ 
 }

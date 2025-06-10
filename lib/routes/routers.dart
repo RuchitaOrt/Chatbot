@@ -1,6 +1,7 @@
 import 'package:chat_bot/AllLanguageChatbot.dart';
 import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/onboardingScreen.dart';
+import 'package:chat_bot/splash_screen.dart';
 import 'package:flutter/material.dart';
 
 
@@ -21,6 +22,10 @@ class Routers {
          case AllLanguageChatbot.route:
         return MaterialPageRoute(
           builder: (_) => AllLanguageChatbot(),
+        );
+         case SplashScreen.route:
+        return MaterialPageRoute(
+          builder: (_) => SplashScreen(),
         );
       default:
         return MaterialPageRoute(builder: (_) => Onboardingscreen());
