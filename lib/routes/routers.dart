@@ -17,7 +17,7 @@ class Routers {
         );
      case Chatbot.route:
         return MaterialPageRoute(
-          builder: (_) => Chatbot(),
+          builder: (_) => Chatbot(selectedIndex: 1,),
         );
          case AllLanguageChatbot.route:
         return MaterialPageRoute(

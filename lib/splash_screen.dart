@@ -4,6 +4,8 @@ import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/sizeConfig.dart';
 import 'package:flutter/material.dart';
 
+import 'Speech_Page.dart';
+
 class SplashScreen extends StatefulWidget {
   static const String route = "/";
 
@@ -51,7 +53,8 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => Chatbot(),
+        // builder: (_) => Chatbot(selectedIndex: 1,),
+        builder: (_) => Speech_Page(),
       ),
     );
   }
