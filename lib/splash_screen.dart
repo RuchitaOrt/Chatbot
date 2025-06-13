@@ -44,18 +44,38 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _startNavigationFallback() {
-    _navigationTimer = Timer(const Duration(seconds: 5), () async {
+    _navigationTimer = Timer(const Duration(seconds: 2), () async {
       _navigateToFallback();
     });
   }
 
   void _navigateToFallback() async {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        // builder: (_) => Chatbot(selectedIndex: 1,),
-        builder: (_) => Speech_Page(),
+    // Navigator.pushReplacement(
+    //   context,
+    //   MaterialPageRoute(
+    //     // builder: (_) => Chatbot(selectedIndex: 1,),
+    //     builder: (_) => Speech_Page(),
+    //   ),
+    // );
+
+    Navigator.of(context).pushAndRemoveUntil(
+      PageRouteBuilder(
+        transitionDuration: Duration(milliseconds: 600),
+        pageBuilder: (context, animation, secondaryAnimation) => Speech_Page(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final opacity = animation.drive(
+            Tween<double>(begin: 0.0, end: 1.0).chain(
+              CurveTween(curve: Curves.easeInOut),
+            ),
+          );
+
+          return FadeTransition(
+            opacity: opacity,
+            child: child,
+          );
+        },
       ),
+          (Route route) => false,
     );
   }
 

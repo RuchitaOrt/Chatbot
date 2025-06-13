@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:chat_bot/Speech_Page.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,8 +49,9 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   String _lastWords = '';
 
   @override
-  void initState() {
+  void initState()   {
     super.initState();
+    _initSpeech();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -57,7 +59,6 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     _micGlowAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    initTts();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.selectedIndex == 0) {
         // normal
@@ -197,7 +198,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
                 "Listening...",
-                style: TextStyle(
+                    style: TextStyle(
                     color: Colors.red[700], fontWeight: FontWeight.bold),
               ),
             ),
@@ -231,6 +232,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                     } else {
                       startListening();
                     }*/
+                    await flutterTts.stop();
                     var status = await Permission.microphone.request();
                     if (status != PermissionStatus.granted) {
                       Fluttertoast.showToast(
@@ -258,8 +260,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                     child: Icon(
                       Icons.mic,
                       size: 30,
-                      color:
-                          _speechToText.isListening ? Colors.red : Colors.white,
+                      color: _speechToText.isListening ? Colors.red : Colors.white,
                       // color: _isListening ? Colors.red : Color(0xff2b3e2b),
                     ),
                   ),
@@ -270,7 +271,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                     Icons.send,
                     color: Colors.white,
                   ),
-                  onPressed: () {
+                  onPressed: () async {
+                    await flutterTts.stop();
                     final text = _controller.text.trim();
                     if (text.isNotEmpty) {
                       detectLanguage(text);
@@ -328,8 +330,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                 ),
                 // onPressed: () => speak(message, _detectedLang),
                 onPressed: () async {
-                  _detectedLang =
-                      await languageIdentifier.identifyLanguage(message);
+                  _stopListening();
+                  _detectedLang = await languageIdentifier.identifyLanguage(message);
                   await flutterTts.stop();
                   speakmessage(message, context);
                 },
@@ -363,6 +365,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
 
     final body = jsonEncode({
       'text': inputText,
+      'languageCode':  '',
     });
 
     try {
@@ -388,7 +391,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
         });
         dismissKeyboard();
         _scrollToBottom();
-        await Future.delayed(const Duration(seconds: 5));
+        await Future.delayed(const Duration(seconds: 3));
         final botReply = languages.first.convertIntoOriginalLanguage;
         setState(() {
           messages.add({
@@ -432,7 +435,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     return [];
   }
 
-  Future<void> initTts() async {
+  /*Future<void> initTts() async {
     await flutterTts.setLanguage(_detectedLang);
     await flutterTts.setPitch(1.0);
     await flutterTts.setSpeechRate(0.5);
@@ -441,7 +444,26 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       print('status $status');
     }, onError: (error) async {
       print('Error $error');
+      _stopListening();
+      setState(() {
+      });
     });
+  }*/
+  void _initSpeech() async {
+    await flutterTts.setLanguage(_detectedLang);
+    await flutterTts.setPitch(1.0);
+    await flutterTts.setSpeechRate(0.5);
+    _speechEnabled = await _speechToText.initialize(onStatus: (status) {
+      // print('status $status');
+    }, onError: (error) async {
+      print('Error $error');
+      setState(() async {
+        await _speechToText.stop();
+       });
+      // _stopListening();
+    });
+
+
   }
 
   Future<void> speakmessage(String message, BuildContext context) async {
@@ -472,20 +494,24 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   }
 
   void _getOutOfApp() {
-    if (Platform.isIOS) {
-      try {
-        exit(0);
-      } catch (e) {
-        SystemNavigator
-            .pop(); // for IOS, not true this, you can make comment this :)
-      }
-    } else {
-      try {
-        SystemNavigator.pop(); // sometimes it cant exit app
-      } catch (e) {
-        exit(0); // so i am giving crash to app ... sad :(
-      }
-    }
+    Navigator.of(context).pushAndRemoveUntil(
+      PageRouteBuilder(
+        transitionDuration: Duration(milliseconds: 500),
+        pageBuilder: (context, animation, secondaryAnimation) => Speech_Page(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final opacity = animation.drive(
+            Tween<double>(begin: 0.0, end: 1.0).chain(
+              CurveTween(curve: Curves.easeInOut),
+            ),
+          );
+          return FadeTransition(
+            opacity: opacity,
+            child: child,
+          );
+        },
+      ),
+          (Route route) => false,
+    );
   }
 
 //

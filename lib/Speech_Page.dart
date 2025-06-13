@@ -28,7 +28,7 @@ class _Speech_page_State extends State<Speech_Page> {
 
   @override
   void dispose() {
-    _speechToText.stop();
+    _speechToText.cancel();
     super.dispose();
   }
 
@@ -131,7 +131,7 @@ class _Speech_page_State extends State<Speech_Page> {
                     Container(
                       child: Text(
                         _speechToText.isListening
-                            ? '"Where is my boarding gate?"'
+                            ? ''
                             : 'How can I help you?',
                         style: TextStyle(
                             fontSize: 18,
@@ -160,9 +160,9 @@ class _Speech_page_State extends State<Speech_Page> {
                     ),
                     Container(
                       child: Text(
-                        _speechEnabled
+                        _speechToText.isNotListening
                             ? 'Tap the microphone to speak'
-                            : 'Speech not available',
+                            : '',
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w400,
@@ -185,9 +185,10 @@ class _Speech_page_State extends State<Speech_Page> {
       print('status $status');
     }, onError: (error) async {
       print('Error $error');
+      _stopListening();
     });
     // _startListening();
-    // setState(() {});
+    setState(() {});
   }
 
   void _startListening() async {
