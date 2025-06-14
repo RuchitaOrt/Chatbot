@@ -157,136 +157,138 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final speechProvider = Provider.of<SpeechProvider>(context);
-    return Scaffold(
-      backgroundColor: const Color(0xFFEAF5F5),
-      appBar: AppBar(
-        backgroundColor: Color(0xff2b3e2b),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: const Color(0xFFEAF5F5),
+        appBar: AppBar(
+          backgroundColor: Color(0xff2b3e2b),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                  onPressed: (() {
+                    _getOutOfApp();
+                  }),
+                  icon: Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white,
+                  )),
+              Text("AI Bot",
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
+              Image.asset(
+                "assets/images/sitalogo.png",
+                height: 45,
+                width: 45,
+              ),
+            ],
+          ),
+          centerTitle: true,
+        ),
+        body: Column(
           children: [
-            IconButton(
-                onPressed: (() {
-                  _getOutOfApp();
-                }),
-                icon: Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Colors.white,
-                )),
-            Text("AI Bot",
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
-            Image.asset(
-              "assets/images/sitalogo.png",
-              height: 45,
-              width: 45,
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final msg = messages[index];
+                  final isUser = msg["isUser"] == "true";
+                  return chatBubble(msg["message"]!,
+                      isUser: isUser, time: msg["time"]!);
+                },
+              ),
+            ),
+            // Text('Current Status: ${speechProvider.status}',),
+            if (speechProvider.speechToText.isListening)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  "Listening...",
+                      style: TextStyle(
+                      color: Colors.red[700], fontWeight: FontWeight.bold),
+                ),
+              ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              color: Color(0xff2b3e2b),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: TextField(
+                        controller: _controller,
+                        maxLines: 1,
+                        focusNode: _focusNode,
+                        style: TextStyle(fontSize: 14),
+                        decoration: const InputDecoration.collapsed(
+                            hintText: "Write anything here..."),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () async {
+                      await flutterTts.stop();
+                      var status = await Permission.microphone.request();
+                      if (status != PermissionStatus.granted) {
+                        Fluttertoast.showToast(
+                          msg: "Microphone permission not granted",
+                          toastLength: Toast.LENGTH_SHORT,
+                        );
+                        return;
+                      } else {
+                        speechProvider.speechToText.isListening
+                            ? _stopListening()
+                            : _startListening();
+                        return;
+                      }
+                    },
+                    child: AnimatedBuilder(
+                      animation: _micGlowAnimation,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: speechProvider.speechToText.isListening
+                              ? _micGlowAnimation.value
+                              : 1.0,
+                          child: child,
+                        );
+                      },
+                      child: Icon(
+                        speechProvider.speechToText.isListening? Icons.mic: Icons.mic_off,
+                        size: 30,
+                        color:speechProvider.speechToText.isListening ? Colors.red : Colors.white,
+                        // color: _isListening ? Colors.red : Color(0xff2b3e2b),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.send,
+                      color: Colors.white,
+                    ),
+                    onPressed: () async {
+                      await flutterTts.stop();
+                      final text = _controller.text.trim();
+                      if (text.isNotEmpty) {
+                        detectLanguage(text);
+                        _controller.clear();
+                        // _hasSentSpeechResult = true;
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
           ],
         ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final msg = messages[index];
-                final isUser = msg["isUser"] == "true";
-                return chatBubble(msg["message"]!,
-                    isUser: isUser, time: msg["time"]!);
-              },
-            ),
-          ),
-          // Text('Current Status: ${speechProvider.status}',),
-          if (speechProvider.speechToText.isListening)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                "Listening...",
-                    style: TextStyle(
-                    color: Colors.red[700], fontWeight: FontWeight.bold),
-              ),
-            ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            color: Color(0xff2b3e2b),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: TextField(
-                      controller: _controller,
-                      maxLines: 1,
-                      focusNode: _focusNode,
-                      style: TextStyle(fontSize: 14),
-                      decoration: const InputDecoration.collapsed(
-                          hintText: "Write anything here..."),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () async {
-                    await flutterTts.stop();
-                    var status = await Permission.microphone.request();
-                    if (status != PermissionStatus.granted) {
-                      Fluttertoast.showToast(
-                        msg: "Microphone permission not granted",
-                        toastLength: Toast.LENGTH_SHORT,
-                      );
-                      return;
-                    } else {
-                      speechProvider.speechToText.isListening
-                          ? _stopListening()
-                          : _startListening();
-                      return;
-                    }
-                  },
-                  child: AnimatedBuilder(
-                    animation: _micGlowAnimation,
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: speechProvider.speechToText.isListening
-                            ? _micGlowAnimation.value
-                            : 1.0,
-                        child: child,
-                      );
-                    },
-                    child: Icon(
-                      speechProvider.speechToText.isListening? Icons.mic: Icons.mic_off,
-                      size: 30,
-                      color:speechProvider.speechToText.isListening ? Colors.red : Colors.white,
-                      // color: _isListening ? Colors.red : Color(0xff2b3e2b),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(
-                    Icons.send,
-                    color: Colors.white,
-                  ),
-                  onPressed: () async {
-                    await flutterTts.stop();
-                    final text = _controller.text.trim();
-                    if (text.isNotEmpty) {
-                      detectLanguage(text);
-                      _controller.clear();
-                      // _hasSentSpeechResult = true;
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

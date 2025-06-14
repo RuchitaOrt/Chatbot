@@ -45,9 +45,9 @@ class _Speech_page_State extends State<Speech_Page> {
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
-    final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.width;
-    return Scaffold(
+    // final height = MediaQuery.of(context).size.height;
+    // final width = MediaQuery.of(context).size.width;
+     return Scaffold(
       appBar: AppBar(
         backgroundColor:Color(0xff2b3e2b),
         title: Row(
@@ -95,7 +95,7 @@ class _Speech_page_State extends State<Speech_Page> {
                   child: Lottie.asset('assets/images/anim_bot.json',
                       height: 250,
                       animate: !_speechToText.isListening),
-                ),
+                 ),
               ],
             ),
             SizedBox(
