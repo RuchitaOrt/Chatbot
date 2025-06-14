@@ -3,7 +3,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 
 class SpeechProvider with ChangeNotifier {
   String _status = "Not initialized";
-  late SpeechToText _speechToText;
+   late SpeechToText _speechToText;
   bool _isInitialized = false;
 
   String get status => _status;

@@ -1,5 +1,3 @@
-import 'package:chat_bot/chatbot.dart';
-import 'package:chat_bot/onboardingScreen.dart';
 import 'package:chat_bot/routes/routers.dart';
 import 'package:chat_bot/splash_screen.dart';
 import 'package:flutter/material.dart';

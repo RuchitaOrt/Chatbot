@@ -68,8 +68,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       if (widget.selectedIndex == 0) {
         // normal
       } else if (widget.selectedIndex == 2) {
-        // _controller.text = widget.speechdata!;
-        detectLanguage(widget.speechdata!);
+         detectLanguage(widget.speechdata!);
         widget.selectedIndex = 1;
       }
     });
@@ -79,7 +78,6 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   void dispose() {
     _controller.dispose();
     _focusNode.dispose(); // Clean up to avoid memory leaks
-    // _speech.stop();
     _speechToText.stop();
     _animationController.dispose();
     languageIdentifier.close();
@@ -93,54 +91,6 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   }
 
   final ScrollController _scrollController = ScrollController();
-
-/*  Future<void> startListening() async {
-    bool available = await _speech.initialize(
-      onStatus: (status) {
-        if (status == "done" || status == "notListening") {
-          setState(() => _isListening = false);
-        }
-      },
-      onError: (error) {
-        setState(() => _isListening = false);
-      },
-    );
-
-    if (available) {
-      setState(() {
-        _isListening = true;
-        _hasSentSpeechResult = false;
-        _recognizedSpeech = "";
-        _controller.text = "";
-      });
-
-      _speech.listen(
-        onResult: (result) {
-          setState(() {
-            _recognizedSpeech = result.recognizedWords;
-            _controller.text = _recognizedSpeech;
-            _controller.selection = TextSelection.fromPosition(
-                TextPosition(offset: _controller.text.length));
-          });
-        },
-        listenMode: stt.ListenMode.confirmation,
-        partialResults: true,
-      );
-    }
-  }
-
-  Future<void> stopListening() async {
-    await _speech.stop();
-    setState(() => _isListening = false);
-
-    final text = _recognizedSpeech.trim();
-    if (text.isNotEmpty && !_hasSentSpeechResult) {
-      // await sendMessage(text);
-      _hasSentSpeechResult = true;
-      _recognizedSpeech = "";
-      _controller.clear();
-    }
-  }*/
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -157,137 +107,144 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final speechProvider = Provider.of<SpeechProvider>(context);
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: const Color(0xFFEAF5F5),
-        appBar: AppBar(
-          backgroundColor: Color(0xff2b3e2b),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return WillPopScope(
+      onWillPop: () async{
+        _getOutOfApp();
+       return false;
+      },
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: const Color(0xFFEAF5F5),
+          appBar: AppBar(
+            automaticallyImplyLeading: false, // Hides the back arrow
+            backgroundColor: Color(0xff2b3e2b),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                    onPressed: (() {
+                      _getOutOfApp();
+                    }),
+                    icon: Icon(
+                      Icons.arrow_back_ios_new,
+                      color: Colors.white,
+                    )),
+                Text("AI Bot",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+                Image.asset(
+                  "assets/images/sitalogo.png",
+                  height: 45,
+                  width: 45,
+                ),
+              ],
+            ),
+            centerTitle: true,
+          ),
+          body: Column(
             children: [
-              IconButton(
-                  onPressed: (() {
-                    _getOutOfApp();
-                  }),
-                  icon: Icon(
-                    Icons.arrow_back_ios_new,
-                    color: Colors.white,
-                  )),
-              Text("AI Bot",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-              Image.asset(
-                "assets/images/sitalogo.png",
-                height: 45,
-                width: 45,
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = messages[index];
+                    final isUser = msg["isUser"] == "true";
+                    return chatBubble(msg["message"]!,
+                        isUser: isUser, time: msg["time"]!);
+                  },
+                ),
+              ),
+              // Text('Current Status: ${speechProvider.status}',),
+              if (speechProvider.speechToText.isListening)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    "Listening...",
+                        style: TextStyle(
+                        color: Colors.red[700], fontWeight: FontWeight.bold),
+                  ),
+                ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                color: Color(0xff2b3e2b),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: TextField(
+                          controller: _controller,
+                          maxLines: 1,
+                          focusNode: _focusNode,
+                          style: TextStyle(fontSize: 14),
+                          decoration: const InputDecoration.collapsed(
+                              hintText: "Write anything here..."),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () async {
+                        await flutterTts.stop();
+                        var status = await Permission.microphone.request();
+                        if (status != PermissionStatus.granted) {
+                          Fluttertoast.showToast(
+                            msg: "Microphone permission not granted",
+                            toastLength: Toast.LENGTH_SHORT,
+                          );
+                          return;
+                        } else {
+                          speechProvider.speechToText.isListening
+                              ? _stopListening()
+                              : _startListening();
+                          return;
+                        }
+                      },
+                      child: AnimatedBuilder(
+                        animation: _micGlowAnimation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: speechProvider.speechToText.isListening
+                                ? _micGlowAnimation.value
+                                : 1.0,
+                            child: child,
+                          );
+                        },
+                        child: Icon(
+                          speechProvider.speechToText.isListening? Icons.mic: Icons.mic_off,
+                          size: 30,
+                          color:speechProvider.speechToText.isListening ? Colors.red : Colors.white,
+                          // color: _isListening ? Colors.red : Color(0xff2b3e2b),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                      ),
+                      onPressed: () async {
+                        await flutterTts.stop();
+                        final text = _controller.text.trim();
+                        if (text.isNotEmpty) {
+                          detectLanguage(text);
+                          _controller.clear();
+                          // _hasSentSpeechResult = true;
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          centerTitle: true,
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final msg = messages[index];
-                  final isUser = msg["isUser"] == "true";
-                  return chatBubble(msg["message"]!,
-                      isUser: isUser, time: msg["time"]!);
-                },
-              ),
-            ),
-            // Text('Current Status: ${speechProvider.status}',),
-            if (speechProvider.speechToText.isListening)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  "Listening...",
-                      style: TextStyle(
-                      color: Colors.red[700], fontWeight: FontWeight.bold),
-                ),
-              ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              color: Color(0xff2b3e2b),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: TextField(
-                        controller: _controller,
-                        maxLines: 1,
-                        focusNode: _focusNode,
-                        style: TextStyle(fontSize: 14),
-                        decoration: const InputDecoration.collapsed(
-                            hintText: "Write anything here..."),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () async {
-                      await flutterTts.stop();
-                      var status = await Permission.microphone.request();
-                      if (status != PermissionStatus.granted) {
-                        Fluttertoast.showToast(
-                          msg: "Microphone permission not granted",
-                          toastLength: Toast.LENGTH_SHORT,
-                        );
-                        return;
-                      } else {
-                        speechProvider.speechToText.isListening
-                            ? _stopListening()
-                            : _startListening();
-                        return;
-                      }
-                    },
-                    child: AnimatedBuilder(
-                      animation: _micGlowAnimation,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: speechProvider.speechToText.isListening
-                              ? _micGlowAnimation.value
-                              : 1.0,
-                          child: child,
-                        );
-                      },
-                      child: Icon(
-                        speechProvider.speechToText.isListening? Icons.mic: Icons.mic_off,
-                        size: 30,
-                        color:speechProvider.speechToText.isListening ? Colors.red : Colors.white,
-                        // color: _isListening ? Colors.red : Color(0xff2b3e2b),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.send,
-                      color: Colors.white,
-                    ),
-                    onPressed: () async {
-                      await flutterTts.stop();
-                      final text = _controller.text.trim();
-                      if (text.isNotEmpty) {
-                        detectLanguage(text);
-                        _controller.clear();
-                        // _hasSentSpeechResult = true;
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -486,7 +443,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     _focusNode.unfocus(); // Dismisses keyboard
   }
 
-  void _getOutOfApp() {
+  Future<void> _getOutOfApp() async {
+    await flutterTts.stop();
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: 500),
@@ -514,6 +472,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       onResult: _onSpeechResult,
       // listenFor: const Duration(minutes: 2),
       // localeId: 'en_US',
+      // localeId: 'es_ES', // Spanish (Spain)
     );
     setState(() {});
   }
@@ -526,16 +485,21 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
 
   void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
-      _lastWords = result.recognizedWords;
-      if (!_speechToText.isListening) {
+      _lastWords = result.recognizedWords.trim();
+      // if (!_speechToText.isListening) {
+      //   detectLanguage(_lastWords);
+      // }
+      if (_lastWords.isNotEmpty && !_speechToText.isListening) {
+        _stopListening();
         detectLanguage(_lastWords);
       }
     });
   }
   void _triggerVibration() async {
-    await Haptics.vibrate(HapticsType.success); // iOS-specific
-    if (await Vibration.hasVibrator() ?? false) { // Fallback for Android
-      Vibration.vibrate(duration: 100);
-    }
+    // await Haptics.vibrate(HapticsType.success); // iOS-specific
+    // if (await Vibration.hasVibrator() ?? false) { // Fallback for Android
+    //   Vibration.vibrate(duration: 100);
+    //
+    // }
   }
 }

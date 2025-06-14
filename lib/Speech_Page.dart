@@ -1,13 +1,14 @@
 import 'dart:io';
-
 import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/sizeConfig.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:vibration/vibration.dart';
 
 import 'SpeechProvider.dart';
 
@@ -19,19 +20,19 @@ class Speech_Page extends StatefulWidget {
 
 class _Speech_page_State extends State<Speech_Page> {
   ///library
-  SpeechToText _speechToText = SpeechToText();
-  bool _speechEnabled = true;
+  SpeechToText _speechToText  = SpeechToText();
+  bool _speechEnabled = false;
   String _lastWords = '';
 
   @override
   void initState() {
+     _initSpeech();
     super.initState();
-    _initSpeech();
   }
 
   @override
   void dispose() {
-    _speechToText.cancel();
+    _speechToText.stop();
     super.dispose();
   }
 
@@ -44,7 +45,7 @@ class _Speech_page_State extends State<Speech_Page> {
 
   @override
   Widget build(BuildContext context) {
-    SizeConfig().init(context);
+    // SizeConfig().init(context);
     // final height = MediaQuery.of(context).size.height;
     // final width = MediaQuery.of(context).size.width;
      return Scaffold(
@@ -94,7 +95,7 @@ class _Speech_page_State extends State<Speech_Page> {
                   width: double.infinity,
                   child: Lottie.asset('assets/images/anim_bot.json',
                       height: 250,
-                      animate: !_speechToText.isListening),
+                      animate: !_speechToText!.isListening),
                  ),
               ],
             ),
@@ -104,7 +105,7 @@ class _Speech_page_State extends State<Speech_Page> {
             Container(
               child: Text(
                 _speechToText.isListening ? 'Listening...' : _lastWords,
-                style: TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.black),
@@ -133,7 +134,7 @@ class _Speech_page_State extends State<Speech_Page> {
                     ),
                     Container(
                       child: Text(
-                        _speechToText.isListening
+                        _speechToText!.isListening
                             ? ''
                             : 'How can I help you?',
                         style: TextStyle(
@@ -155,7 +156,7 @@ class _Speech_page_State extends State<Speech_Page> {
                         child: Lottie.asset('assets/images/speech_anim.json',
                             height: 95,
                             width: 95,
-                            animate: _speechToText.isListening),
+                            animate: _speechToText!.isListening),
                        ),
                     ),
                     SizedBox(
@@ -163,7 +164,7 @@ class _Speech_page_State extends State<Speech_Page> {
                     ),
                     Container(
                       child: Text(
-                        _speechToText.isNotListening
+                        _speechToText!.isNotListening
                             ? 'Tap the microphone to speak'
                             : '',
                         style: TextStyle(
@@ -186,8 +187,9 @@ class _Speech_page_State extends State<Speech_Page> {
   void _initSpeech() async {
     final speechProvider = Provider.of<SpeechProvider>(context, listen: false);
     _speechEnabled = await _speechToText.initialize(onStatus: (status) {
-      print('status Speech_initSpeech $status');
+      print('status Speech_initSpeech $_speechEnabled');
       speechProvider.updateStatus("Status: $status",_speechToText);
+      testVibrate();
     }, onError: (error) async {
       print('Error Speech_initSpeech  $error');
       speechProvider.updateStatus("Error: $error",_speechToText);
@@ -201,13 +203,14 @@ class _Speech_page_State extends State<Speech_Page> {
   void _startListening() async {
     await _speechToText.listen(
       onResult: _onSpeechResult,
+      // localeId: 'es_ES', // Spanish (Spain)
       // listenFor: const Duration(minutes: 2),
       // localeId: 'en_US',
     );
     setState(() {});
   }
   void _stopListening() async {
-    await _speechToText.stop();
+    await _speechToText!.stop();
     print('_stopListening');
     setState(() {});
   }
@@ -215,16 +218,26 @@ class _Speech_page_State extends State<Speech_Page> {
   void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
       _lastWords = result.recognizedWords;
-      if (!_speechToText.isListening) {
-        _speechToText.cancel();
+      if (!_speechToText!.isListening) {
         _stopListening();
-        Navigator.of(context).pushAndRemoveUntil(
+        if (_lastWords.isNotEmpty) {
+          Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-                builder: (context) => Chatbot(
-                      selectedIndex: 2,
-                      speechdata: _lastWords,
-                    )),
-            (Route route) => false);
+              builder: (context) => Chatbot(
+                selectedIndex: 2,
+                speechdata: _lastWords,
+              ),
+            ),
+          (Route route) => false,
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No speech detected. Please try again.'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
       }
     });
   }
@@ -245,4 +258,14 @@ class _Speech_page_State extends State<Speech_Page> {
       }
     }
   }
+  void testVibrate() async {
+    await Haptics.vibrate(HapticsType.success); // iOS-specific
+    if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate(duration: 100);
+      print('Vibration triggered.');
+    } else {
+      print('Device does not support vibration.');
+    }
+  }
+
 }
