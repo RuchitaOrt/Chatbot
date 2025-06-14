@@ -5,8 +5,11 @@ import 'package:chat_bot/sizeConfig.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+
+import 'SpeechProvider.dart';
 
 class Speech_Page extends StatefulWidget {
   // Speech_Page({Key key}) : super(key: key);
@@ -181,13 +184,17 @@ class _Speech_page_State extends State<Speech_Page> {
   }
 
   void _initSpeech() async {
+    final speechProvider = Provider.of<SpeechProvider>(context, listen: false);
     _speechEnabled = await _speechToText.initialize(onStatus: (status) {
-      print('status $status');
+      print('status Speech_initSpeech $status');
+      speechProvider.updateStatus("Status: $status",_speechToText);
     }, onError: (error) async {
-      print('Error $error');
+      print('Error Speech_initSpeech  $error');
+      speechProvider.updateStatus("Error: $error",_speechToText);
       _stopListening();
     });
     // _startListening();
+    speechProvider.setInitialized(true);
     setState(() {});
   }
 
@@ -209,6 +216,8 @@ class _Speech_page_State extends State<Speech_Page> {
     setState(() {
       _lastWords = result.recognizedWords;
       if (!_speechToText.isListening) {
+        _speechToText.cancel();
+        _stopListening();
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
                 builder: (context) => Chatbot(

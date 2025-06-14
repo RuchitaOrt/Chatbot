@@ -5,6 +5,9 @@ import 'package:chat_bot/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import 'SpeechProvider.dart';
 
 final GlobalKey<NavigatorState> routeGlobalKey = GlobalKey();
 Future<void> main() async {
@@ -15,7 +18,13 @@ SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(MyApp());
+  /*runApp(MyApp());*/
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => SpeechProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 

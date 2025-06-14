@@ -6,13 +6,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
 import 'package:translator/translator.dart';
+import 'package:vibration/vibration.dart';
 import 'SingleLanguage.dart';
+import 'SpeechProvider.dart';
 
 class Chatbot extends StatefulWidget {
   // const Chatbot({super.key});
@@ -42,6 +46,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _micGlowAnimation;
   List<Map<String, String>> messages = [];
+
 
   // ----
   final stt.SpeechToText _speechToText = stt.SpeechToText();
@@ -151,6 +156,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final speechProvider = Provider.of<SpeechProvider>(context);
     return Scaffold(
       backgroundColor: const Color(0xFFEAF5F5),
       appBar: AppBar(
@@ -193,7 +199,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
               },
             ),
           ),
-          if (_speechToText.isListening)
+          // Text('Current Status: ${speechProvider.status}',),
+          if (speechProvider.speechToText.isListening)
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
@@ -227,11 +234,6 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () async {
-                    /* if (_isListening) {
-                      stopListening();
-                    } else {
-                      startListening();
-                    }*/
                     await flutterTts.stop();
                     var status = await Permission.microphone.request();
                     if (status != PermissionStatus.granted) {
@@ -241,7 +243,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                       );
                       return;
                     } else {
-                      _speechToText.isListening
+                      speechProvider.speechToText.isListening
                           ? _stopListening()
                           : _startListening();
                       return;
@@ -251,16 +253,16 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                     animation: _micGlowAnimation,
                     builder: (context, child) {
                       return Transform.scale(
-                        scale: _speechToText.isListening
+                        scale: speechProvider.speechToText.isListening
                             ? _micGlowAnimation.value
                             : 1.0,
                         child: child,
                       );
                     },
                     child: Icon(
-                      Icons.mic,
+                      speechProvider.speechToText.isListening? Icons.mic: Icons.mic_off,
                       size: 30,
-                      color: _speechToText.isListening ? Colors.red : Colors.white,
+                      color:speechProvider.speechToText.isListening ? Colors.red : Colors.white,
                       // color: _isListening ? Colors.red : Color(0xff2b3e2b),
                     ),
                   ),
@@ -435,32 +437,21 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     return [];
   }
 
-  /*Future<void> initTts() async {
-    await flutterTts.setLanguage(_detectedLang);
-    await flutterTts.setPitch(1.0);
-    await flutterTts.setSpeechRate(0.5);
-    // ---
-    _speechEnabled = await _speechToText.initialize(onStatus: (status) {
-      print('status $status');
-    }, onError: (error) async {
-      print('Error $error');
-      _stopListening();
-      setState(() {
-      });
-    });
-  }*/
   void _initSpeech() async {
     await flutterTts.setLanguage(_detectedLang);
     await flutterTts.setPitch(1.0);
     await flutterTts.setSpeechRate(0.5);
     _speechEnabled = await _speechToText.initialize(onStatus: (status) {
-      // print('status $status');
+      print('status _initSpeech $status');
+      if (status == 'listening' && !_speechToText.isListening) {
+        _triggerVibration(); // Vibrate when listening starts
+      }
     }, onError: (error) async {
-      print('Error $error');
-      setState(() async {
-        await _speechToText.stop();
+      print('Error_initSpeech  $error');
+      setState(() {
+        _stopListening();
        });
-      // _stopListening();
+
     });
 
 
@@ -538,5 +529,11 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
         detectLanguage(_lastWords);
       }
     });
+  }
+  void _triggerVibration() async {
+    await Haptics.vibrate(HapticsType.success); // iOS-specific
+    if (await Vibration.hasVibrator() ?? false) { // Fallback for Android
+      Vibration.vibrate(duration: 100);
+    }
   }
 }
