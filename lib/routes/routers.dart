@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../Speech_Page_Spanish.dart';
 import '../chatbot_spanish.dart';
+import '../translator_page.dart';
 
 class Routers {
   // Create a static method to configure the router
@@ -43,6 +44,10 @@ class Routers {
       case Chatbot_Spanish.route:
         return MaterialPageRoute(
           builder: (_) => Chatbot_Spanish(selectedIndex: 1,),
+        );
+        case Translator_Page.route:
+        return MaterialPageRoute(
+          builder: (_) => Translator_Page(selectedIndex: 1,),
         );
       default:
         return MaterialPageRoute(builder: (_) => Onboardingscreen());

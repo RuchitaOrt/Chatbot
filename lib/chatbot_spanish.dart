@@ -163,7 +163,7 @@ class _Chatbot_SpanishState extends State<Chatbot_Spanish> with SingleTickerProv
                 ),
               ),
               // Text('Current Status: ${speechProvider.status}',),
-              if (speechProvider.speechToText.isListening)
+              if (speechProvider.speechToText?.isListening ?? false)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
@@ -206,7 +206,7 @@ class _Chatbot_SpanishState extends State<Chatbot_Spanish> with SingleTickerProv
                           );
                           return;
                         } else {
-                          speechProvider.speechToText.isListening
+                          speechProvider.speechToText?.isListening ?? false
                               ? _stopListening()
                               : _startListening();
                           return;
@@ -216,16 +216,16 @@ class _Chatbot_SpanishState extends State<Chatbot_Spanish> with SingleTickerProv
                         animation: _micGlowAnimation,
                         builder: (context, child) {
                           return Transform.scale(
-                            scale: speechProvider.speechToText.isListening
+                            scale: speechProvider.speechToText?.isListening ?? false
                                 ? _micGlowAnimation.value
                                 : 1.0,
                             child: child,
                           );
                         },
                         child: Icon(
-                          speechProvider.speechToText.isListening? Icons.mic: Icons.mic_off,
+                          speechProvider.speechToText?.isListening ?? false? Icons.mic: Icons.mic_off,
                           size: 30,
-                          color:speechProvider.speechToText.isListening ? Colors.red : Colors.white,
+                          color:speechProvider.speechToText?.isListening ?? false ? Colors.red : Colors.white,
                           // color: _isListening ? Colors.red : Color(0xff2b3e2b),
                         ),
                       ),

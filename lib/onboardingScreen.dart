@@ -4,7 +4,14 @@ import 'package:chat_bot/Speech_Page_Spanish.dart';
 import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/main.dart';
 import 'package:chat_bot/sizeConfig.dart';
+import 'package:chat_bot/translator_page.dart';
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:provider/provider.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:vibration/vibration.dart';
+
+import 'SpeechProvider.dart';
 
 class Onboardingscreen extends StatefulWidget {
   static const String route = "/onboarding";
@@ -16,6 +23,20 @@ class Onboardingscreen extends StatefulWidget {
 }
 
 class _OnboardingscreenState extends State<Onboardingscreen> {
+
+  SpeechToText _speechToText  = SpeechToText();
+@override
+  void initState() {
+    // TODO: implement initState
+  _initSpeech();
+    super.initState();
+  }
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _speechToText.stop();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
@@ -113,7 +134,7 @@ class _OnboardingscreenState extends State<Onboardingscreen> {
                   onTap: () {
                     Navigator.of(
                       routeGlobalKey.currentContext!,
-                    ).pushNamed(AllLanguageChatbot.route);
+                    ).pushNamed(Translator_Page.route);
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -210,5 +231,61 @@ class _OnboardingscreenState extends State<Onboardingscreen> {
             ),
           )),
     );
+  }
+  void _initSpeech() async {
+    /*final speechProvider = Provider.of<SpeechProvider>(context, listen: false);
+     await _speechToText.initialize(onStatus: (status) {
+      print('status onboarding_initSpeech');
+      speechProvider.updateStatus("Status: $status",_speechToText);
+      if (status == 'listening' && !_speechToText.isListening) {
+        testVibrate();
+      }
+    }, onError: (error) async {
+      print('Error onboarding_initSpeech  $error');
+      speechProvider.updateStatus("Error: $error",_speechToText);
+    });
+    // _startListening();
+    speechProvider.setInitialized(true);
+    setState(() {});*/
+
+    final speechProvider = Provider.of<SpeechProvider>(context, listen: false);
+    final speechToText = SpeechToText();  // Create instance first
+    try {
+      final initialized = await speechToText.initialize(
+        onStatus: (status) {
+          print('status onboarding_initSpeech');
+          speechProvider.updateStatus("Status: $status", speechToText);
+          if (status == 'listening' && !speechToText.isListening) {
+            testVibrate();
+          }
+        },
+        onError: (error) async {
+          print('Error onboarding_initSpeech $error');
+          speechProvider.updateStatus("Error: $error", speechToText);
+        },
+      );
+
+      speechProvider.updateStatus(
+          initialized ? "Ready to listen" : "Failed to initialize",
+          speechToText
+      );
+      speechProvider.setInitialized(initialized);
+    } catch (e) {
+      speechProvider.updateStatus("Initialization error: $e", speechToText);
+      speechProvider.setInitialized(false);
+    }
+
+    setState(() {});
+
+  }
+
+  void testVibrate() async {
+    await Haptics.vibrate(HapticsType.success); // iOS-specific
+    if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate(duration: 100);
+      print('Vibration triggered.');
+    } else {
+      print('Device does not support vibration.');
+    }
   }
 }

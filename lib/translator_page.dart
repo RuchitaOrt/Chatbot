@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:chat_bot/Speech_Page.dart';
+import 'package:chat_bot/onboardingScreen.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,19 +20,20 @@ import 'package:vibration/vibration.dart';
 import 'SingleLanguage.dart';
 import 'SpeechProvider.dart';
 
-class Chatbot extends StatefulWidget {
-  // const Chatbot({super.key});
-  Chatbot({super.key, required this.selectedIndex, this.speechdata});
+class Translator_Page extends StatefulWidget {
+  // const Translator_Page({super.key});
+  Translator_Page({super.key, required this.selectedIndex, this.speechdata});
 
-  static const String route = "/chatBot";
+  static const String route = "/Translator_Page";
   int selectedIndex = 0;
   String? speechdata = '';
 
   @override
-  State<Chatbot> createState() => _ChatbotState();
+  State<Translator_Page> createState() => _Translator_PageState();
 }
 
-class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
+class _Translator_PageState extends State<Translator_Page>
+    with SingleTickerProviderStateMixin {
   final FlutterTts flutterTts = FlutterTts();
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode(); // Declare a FocusNode
@@ -43,23 +45,64 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   // bool _isListening = false;
   // bool _hasSentSpeechResult = false;
   // String _recognizedSpeech = "";
-  String _detectedLang = "en";
+  // String _detectedLang = "en";
   late AnimationController _animationController;
   late Animation<double> _micGlowAnimation;
   List<Map<String, String>> messages = [];
-
 
   // ----
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   bool _speechEnabled = true;
   String _lastWords = '';
+
   // ----
   DateTime? _lastApiCallTime;
   Timer? _apiCooldownTimer;
+
+  // ---
+  final Map<String, String> languages = {
+    // Indian Languages (with country code)
+    'Hindi': 'hi_IN',
+    'Bengali': 'bn_IN',
+    'Telugu': 'te_IN',
+    'Tamil': 'ta_IN',
+    'Gujarati': 'gu_IN',
+    'Kannada': 'kn_IN',
+    'Malayalam': 'ml_IN',
+    'Marathi': 'mr_IN',
+    'Punjabi': 'pa_IN',
+    'Urdu': 'ur_IN',
+    // International Languages (with country code where applicable)
+    'English': 'en_US',
+    'Spanish': 'es_ES',
+    'French': 'fr_FR',
+    'German': 'de_DE',
+    'Italian': 'it_IT',
+    'Portuguese': 'pt_PT',
+    'Portuguese': 'pt_BR',
+    'Russian': 'ru_RU',
+    'Japanese': 'ja_JP',
+    'Arabic': 'ar_SA',
+    'Korean': 'ko_KR',
+    'Turkish': 'tr_TR',
+    'Thai': 'th_TH',
+  };
+
+  String selectedLanguage = 'Hindi';
+  String _detectedLang = 'hi_IN';
+
+  // List<stt.LocaleName> _availableLocales = [];
+  // String? _selectedLocaleId;
+  // String _selectedLanguageName = "Select Language";
+  // String _detectedLang = 'en'; // Default language code
+  // bool _isLoading = true;
+
   @override
-  void initState()   {
+  void initState() {
     super.initState();
     _initSpeech();
+    // _loadAvailableLanguages();
+    // _stopListening();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -71,8 +114,9 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       if (widget.selectedIndex == 0) {
         // normal
       } else if (widget.selectedIndex == 2) {
-        _detectedLang = await languageIdentifier.identifyLanguage(widget.speechdata!);
-         detectLanguage(widget.speechdata!);
+        _detectedLang =
+            await languageIdentifier.identifyLanguage(widget.speechdata!);
+        detectLanguage(widget.speechdata!);
         widget.selectedIndex = 1;
       }
     });
@@ -87,7 +131,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     languageIdentifier.close();
     _scrollController.dispose();
     _apiCooldownTimer?.cancel();
-     super.dispose();
+    super.dispose();
   }
 
   Future<void> speak(String text, String langCode) async {
@@ -113,9 +157,9 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final speechProvider = Provider.of<SpeechProvider>(context);
     return WillPopScope(
-      onWillPop: () async{
+      onWillPop: () async {
         _getOutOfApp();
-       return false;
+        return false;
       },
       child: SafeArea(
         child: Scaffold(
@@ -124,7 +168,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
             automaticallyImplyLeading: false, // Hides the back arrow
             backgroundColor: Color(0xff2b3e2b),
             title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
                     onPressed: (() {
@@ -134,13 +178,39 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                       Icons.arrow_back_ios_new,
                       color: Colors.white,
                     )),
-                Text("AI Bot",
+                Text("Translate",
                     style: TextStyle(
                         color: Colors.white, fontWeight: FontWeight.bold)),
-                Image.asset(
-                  "assets/images/sitalogo.png",
-                  height: 45,
-                  width: 45,
+                Spacer(),
+                // Dropdown Button with both name and code
+                DropdownButton<String>(
+                  value: selectedLanguage,
+                  dropdownColor: Color(0xff2b3e2b),
+                  underline: SizedBox(),
+                  icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.normal,
+                  ),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedLanguage = newValue!;
+                      _detectedLang = languages[newValue]!;
+                      print('Selected: $selectedLanguage ($_detectedLang)');
+
+                    });
+                  },
+                  items: languages.entries.map((entry) {
+                    return DropdownMenuItem<String>(
+                      value: entry.key,
+                      child: Text(
+                        // '${entry.key} (${entry.value.toUpperCase()})',
+                        '${entry.key}',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ],
             ),
@@ -168,18 +238,20 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
                     "Listening...",
-                        style: TextStyle(
+                    style: TextStyle(
                         color: Colors.red[700], fontWeight: FontWeight.bold),
                   ),
                 ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 color: Color(0xff2b3e2b),
                 child: Row(
                   children: [
                     Expanded(
                       child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(25),
@@ -217,16 +289,23 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                         animation: _micGlowAnimation,
                         builder: (context, child) {
                           return Transform.scale(
-                            scale: speechProvider.speechToText?.isListening ?? false
+                            // scale: speechProvider.speechToText.isListening
+                            scale: speechProvider.speechToText?.isListening ??
+                                    false
                                 ? _micGlowAnimation.value
                                 : 1.0,
                             child: child,
                           );
                         },
                         child: Icon(
-                          speechProvider.speechToText?.isListening ?? false? Icons.mic: Icons.mic_off,
+                          speechProvider.speechToText?.isListening ?? false
+                              ? Icons.mic
+                              : Icons.mic_off,
                           size: 30,
-                          color:speechProvider.speechToText?.isListening ?? false ? Colors.red : Colors.white,
+                          color:
+                              speechProvider.speechToText?.isListening ?? false
+                                  ? Colors.red
+                                  : Colors.white,
                           // color: _isListening ? Colors.red : Color(0xff2b3e2b),
                         ),
                       ),
@@ -290,19 +369,23 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
               ),
             ),
             if (!isUser)
-              IconButton(
-                icon: const Icon(
-                  Icons.volume_up,
-                  size: 20,
-                  color: Color(0xff2b3e2b),
+              Visibility(
+                visible: false,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.volume_up,
+                    size: 20,
+                    color: Color(0xff2b3e2b),
+                  ),
+                  // onPressed: () => speak(message, _detectedLang),
+                  onPressed: () async {
+                    _stopListening();
+                    _detectedLang =
+                        await languageIdentifier.identifyLanguage(message);
+                    await flutterTts.stop();
+                    speakmessage(message, context);
+                  },
                 ),
-                // onPressed: () => speak(message, _detectedLang),
-                onPressed: () async {
-                  _stopListening();
-                  _detectedLang = await languageIdentifier.identifyLanguage(message);
-                  await flutterTts.stop();
-                  speakmessage(message, context);
-                },
               ),
           ],
         ),
@@ -314,6 +397,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       ],
     );
   }
+
 
   Future<void> detectLanguage(String inputText) async {
     var connectivityResult = await Connectivity().checkConnectivity();
@@ -333,7 +417,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
 
     final body = jsonEncode({
       'text': inputText,
-      'languageCode':  '',
+      'languageCode': '',
+      "status": 2,
     });
 
     try {
@@ -360,18 +445,19 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
         dismissKeyboard();
         _scrollToBottom();
         await Future.delayed(const Duration(seconds: 3));
-        final botReply = languages.first.convertIntoOriginalLanguage;
+        final botReply = languages.first.translatedEnglish;
         setState(() {
           messages.add({
             "message": botReply,
             "isUser": "false",
-            "time": '$time ${languages.first.languageName}'
+            // "time": '$time ${languages.first.languageName}'
+            "time": '$time ${'English'}'
           });
         });
         _scrollToBottom();
         // Speak in detected language
-        speakmessage(botReply, context);
-        _scrollToBottom();
+        // speakmessage(botReply, context);
+        // _scrollToBottom();
         dismissKeyboard();
       } else {
         print('Failed with status code: ${response.statusCode}');
@@ -407,20 +493,19 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     await flutterTts.setLanguage(_detectedLang);
     await flutterTts.setPitch(1.0);
     await flutterTts.setSpeechRate(0.5);
+    final speechProvider = Provider.of<SpeechProvider>(context, listen: false);
     _speechEnabled = await _speechToText.initialize(onStatus: (status) {
+      speechProvider.updateStatus("Status: $status", _speechToText);
       print('status _initSpeech $status');
-      if (status == 'listening' && !_speechToText.isListening) {
-        _triggerVibration(); // Vibrate when listening starts
-      }
+      _triggerVibration(); // Vibrate when listening starts
     }, onError: (error) async {
+      speechProvider.updateStatus("Error: $error", _speechToText);
       print('Error_initSpeech  $error');
+      speechProvider.setInitialized(true);
       setState(() {
-        _stopListening();
-       });
-
+        // _stopListening();
+      });
     });
-
-
   }
 
   Future<void> speakmessage(String message, BuildContext context) async {
@@ -456,7 +541,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: 500),
-        pageBuilder: (context, animation, secondaryAnimation) => Speech_Page(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            Onboardingscreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           final opacity = animation.drive(
             Tween<double>(begin: 0.0, end: 1.0).chain(
@@ -469,7 +555,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
           );
         },
       ),
-          (Route route) => false,
+      (Route route) => false,
     );
   }
 
@@ -479,7 +565,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     await _speechToText.listen(
       onResult: _onSpeechResult,
       // listenFor: const Duration(minutes: 2),
-      // localeId: 'en_US',
+      localeId: _detectedLang,
       // localeId: 'es_ES', // Spanish (Spain)
     );
     setState(() {});
@@ -487,7 +573,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
 
   void _stopListening() async {
     await _speechToText.stop();
-     print('_stopListening');
+    print('_stopListening');
     setState(() {});
   }
 
@@ -545,17 +631,19 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   }
 
   void _showCooldownMessage() {
-    final remaining = 5 - DateTime.now().difference(_lastApiCallTime!).inSeconds;
+    final remaining =
+        5 - DateTime.now().difference(_lastApiCallTime!).inSeconds;
     // Fluttertoast.showToast(
     //   msg: "Please wait $remaining seconds before speaking again",
     //   toastLength: Toast.LENGTH_SHORT,
     // );
   }
+
   void _triggerVibration() async {
-    // await Haptics.vibrate(HapticsType.success); // iOS-specific
-    // if (await Vibration.hasVibrator() ?? false) { // Fallback for Android
-    //   Vibration.vibrate(duration: 100);
-    //
-    // }
+    await Haptics.vibrate(HapticsType.success); // iOS-specific
+    if (await Vibration.hasVibrator() ?? false) {
+      // Fallback for Android
+      Vibration.vibrate(duration: 100);
+    }
   }
 }
