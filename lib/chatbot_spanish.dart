@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:chat_bot/Speech_Page.dart';
+import 'package:chat_bot/Speech_Page_Spanish.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,19 +20,19 @@ import 'package:vibration/vibration.dart';
 import 'SingleLanguage.dart';
 import 'SpeechProvider.dart';
 
-class Chatbot extends StatefulWidget {
-  // const Chatbot({super.key});
-  Chatbot({super.key, required this.selectedIndex, this.speechdata});
+class Chatbot_Spanish extends StatefulWidget {
+  // const Chatbot_Spanish({super.key});
+  Chatbot_Spanish({super.key, required this.selectedIndex, this.speechdata});
 
-  static const String route = "/chatBot";
+  static const String route = "/Chatbot_Spanish";
   int selectedIndex = 0;
   String? speechdata = '';
 
   @override
-  State<Chatbot> createState() => _ChatbotState();
+  State<Chatbot_Spanish> createState() => _Chatbot_SpanishState();
 }
 
-class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
+class _Chatbot_SpanishState extends State<Chatbot_Spanish> with SingleTickerProviderStateMixin {
   final FlutterTts flutterTts = FlutterTts();
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode(); // Declare a FocusNode
@@ -454,7 +455,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: 500),
-        pageBuilder: (context, animation, secondaryAnimation) => Speech_Page(),
+        pageBuilder: (context, animation, secondaryAnimation) => Speech_Page_Spanish(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           final opacity = animation.drive(
             Tween<double>(begin: 0.0, end: 1.0).chain(
@@ -478,7 +479,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       onResult: _onSpeechResult,
       // listenFor: const Duration(minutes: 2),
       // localeId: 'en_US',
-      // localeId: 'es_ES', // Spanish (Spain)
+      localeId: 'es_ES', // Spanish (Spain)
     );
     setState(() {});
   }

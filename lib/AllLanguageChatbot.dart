@@ -232,96 +232,98 @@ class _ChatbotState extends State<AllLanguageChatbot> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFEAF5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.teal[100],
-        title: const Text("Chatbot", style: TextStyle(color: Colors.black)),
-        centerTitle: true,
-        actions: [
-          if (_locales.isNotEmpty)
-            DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedLocaleId,
-                items: _locales.map((locale) {
-                  return DropdownMenuItem<String>(
-                    value: locale.localeId,
-                    child: Text(locale.name, style: const TextStyle(fontSize: 12)),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedLocaleId = value;
-                    });
-                  }
-                },
-              ),
-            ),
-          IconButton(
-            icon: const Icon(Icons.language),
-            onPressed: () {
-              print("Current selected locale: $_selectedLocaleId");
-              print("Available locales:");
-              _locales.forEach((locale) => print('${locale.localeId} - ${locale.name}'));
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final msg = messages[index];
-                final isUser = msg["isUser"] == "true";
-                return chatBubble(msg["message"]!, isUser: isUser, time: msg["time"]!);
-              },
-            ),
-          ),
-          if (_isListening)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                "Listening...",
-                style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.bold),
-              ),
-            ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            color: Colors.white,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration.collapsed(hintText: "Speak or type..."),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    _isListening ? Icons.mic_off : Icons.mic,
-                    color: _isListening ? Colors.red : Colors.black54,
-                  ),
-                  onPressed: toggleListening,
-                ),
-                const SizedBox(width: 12),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: () {
-                    final text = _controller.text.trim();
-                    if (text.isNotEmpty) {
-                      sendMessage(text);
-                      _controller.clear();
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: const Color(0xFFEAF5F5),
+        appBar: AppBar(
+          backgroundColor: Colors.teal[100],
+          title: const Text("Chatbot", style: TextStyle(color: Colors.black)),
+          centerTitle: true,
+          actions: [
+            if (_locales.isNotEmpty)
+              DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedLocaleId,
+                  items: _locales.map((locale) {
+                    return DropdownMenuItem<String>(
+                      value: locale.localeId,
+                      child: Text(locale.name, style: const TextStyle(fontSize: 12)),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedLocaleId = value;
+                      });
                     }
                   },
                 ),
-              ],
+              ),
+            IconButton(
+              icon: const Icon(Icons.language),
+              onPressed: () {
+                print("Current selected locale: $_selectedLocaleId");
+                print("Available locales:");
+                _locales.forEach((locale) => print('${locale.localeId} - ${locale.name}'));
+              },
             ),
-          ),
-        ],
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final msg = messages[index];
+                  final isUser = msg["isUser"] == "true";
+                  return chatBubble(msg["message"]!, isUser: isUser, time: msg["time"]!);
+                },
+              ),
+            ),
+            if (_isListening)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  "Listening...",
+                  style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.bold),
+                ),
+              ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              color: Colors.white,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      decoration: const InputDecoration.collapsed(hintText: "Speak or type..."),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      _isListening ? Icons.mic_off : Icons.mic,
+                      color: _isListening ? Colors.red : Colors.black54,
+                    ),
+                    onPressed: toggleListening,
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: () {
+                      final text = _controller.text.trim();
+                      if (text.isNotEmpty) {
+                        sendMessage(text);
+                        _controller.clear();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

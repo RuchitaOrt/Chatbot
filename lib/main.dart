@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:chat_bot/Speech_Page.dart';
 import 'package:chat_bot/chatbot.dart';
+import 'package:chat_bot/onboardingScreen.dart';
 import 'package:chat_bot/routes/routers.dart';
 import 'package:chat_bot/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -58,8 +59,9 @@ class _MyAppState extends State<MyApp> {
        theme: ThemeData(
       textTheme: GoogleFonts.interTextTheme(),
         ),
-        initialRoute:Speech_Page.route,
+        // initialRoute:Speech_Page.route,
         // initialRoute: SplashScreen.route,
+        initialRoute: Onboardingscreen.route,
         onGenerateRoute: Routers.generateRoute,
       );
     

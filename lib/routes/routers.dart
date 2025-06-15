@@ -5,6 +5,9 @@ import 'package:chat_bot/onboardingScreen.dart';
 import 'package:chat_bot/splash_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../Speech_Page_Spanish.dart';
+import '../chatbot_spanish.dart';
+
 class Routers {
   // Create a static method to configure the router
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -32,6 +35,14 @@ class Routers {
       case Speech_Page.route:
         return MaterialPageRoute(
           builder: (_) => Speech_Page(),
+        );
+      case Speech_Page_Spanish.route:
+        return MaterialPageRoute(
+          builder: (_) => Speech_Page_Spanish(),
+        );
+      case Chatbot_Spanish.route:
+        return MaterialPageRoute(
+          builder: (_) => Chatbot_Spanish(selectedIndex: 1,),
         );
       default:
         return MaterialPageRoute(builder: (_) => Onboardingscreen());

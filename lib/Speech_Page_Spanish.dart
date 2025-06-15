@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:chat_bot/chatbot.dart';
+import 'package:chat_bot/chatbot_spanish.dart';
 import 'package:chat_bot/onboardingScreen.dart';
 import 'package:chat_bot/sizeConfig.dart';
 import 'package:flutter/material.dart';
@@ -14,15 +15,15 @@ import 'package:vibration/vibration.dart';
 import 'SpeechProvider.dart';
 import 'main.dart';
 
-class Speech_Page extends StatefulWidget {
-  static const String route = "/speech";
-  const Speech_Page({super.key});
-  // Speech_Page({Key key}) : super(key: key);
+class Speech_Page_Spanish extends StatefulWidget {
+  static const String route = "/speech_spanish";
+  const Speech_Page_Spanish({super.key});
+  // Speech_Page_Spanish({Key key}) : super(key: key);
   @override
-  State<Speech_Page> createState() => _Speech_page_State();
+  State<Speech_Page_Spanish> createState() => _Speech_Page_Spanish_State();
 }
 
-class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderStateMixin {
+class _Speech_Page_Spanish_State extends State<Speech_Page_Spanish> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -43,7 +44,7 @@ class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderSta
        curve: Curves.easeInOut,
      )..addStatusListener((status) {
        // if (status == AnimationStatus.completed) {
-       //   Navigator.pushReplacementNamed(context, Speech_Page.route);
+       //   Navigator.pushReplacementNamed(context, Speech_Page_Spanish.route);
        // }
      });
 
@@ -236,7 +237,7 @@ class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderSta
   void _startListening() async {
     await _speechToText.listen(
       onResult: _onSpeechResult,
-      // localeId: 'es_ES', // Spanish (Spain)
+      localeId: 'es_ES', // Spanish (Spain)
       // listenFor: const Duration(minutes: 2),
       // localeId: 'en_US',
     );
@@ -257,7 +258,7 @@ class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderSta
         if (_lastWords.isNotEmpty) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (context) => Chatbot(
+              builder: (context) => Chatbot_Spanish(
                 selectedIndex: 2,
                 speechdata: _lastWords,
               ),
