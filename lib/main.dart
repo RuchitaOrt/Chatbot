@@ -1,7 +1,12 @@
+import 'dart:ui';
+
+import 'package:chat_bot/Speech_Page.dart';
+import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/routes/routers.dart';
 import 'package:chat_bot/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -10,12 +15,17 @@ import 'SpeechProvider.dart';
 final GlobalKey<NavigatorState> routeGlobalKey = GlobalKey();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
- 
 SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
+  // Remove after 2 seconds (or after your initialization)
+  Future.delayed(Duration(seconds: 3), () {
+    FlutterNativeSplash.remove();
+  });
   /*runApp(MyApp());*/
   runApp(
     ChangeNotifierProvider(
@@ -48,7 +58,8 @@ class _MyAppState extends State<MyApp> {
        theme: ThemeData(
       textTheme: GoogleFonts.interTextTheme(),
         ),
-        initialRoute: SplashScreen.route,
+        initialRoute:Speech_Page.route,
+        // initialRoute: SplashScreen.route,
         onGenerateRoute: Routers.generateRoute,
       );
     

@@ -48,6 +48,17 @@ dependencies:
   provider: ^6.1.5
   vibration: ^3.1.3
   haptic_feedback: ^0.5.1+1
+  flutter_native_splash: ^2.4.4
+#
+#  ## Splash screen configuration should be at the root level (not under flutter:)
+#flutter_native_splash:
+#    color: "#000000"
+#    android_12:
+#    background_image: assets/images/sitalogo.png
+#    android: true
+#    ios: true
+
+
 
 dev_dependencies:
   flutter_test:
@@ -61,7 +72,6 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
-
 # The following section is specific to Flutter packages.
 flutter:
 
@@ -74,6 +84,8 @@ flutter:
   assets:
     - assets/
     - assets/images/
+
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -100,3 +112,20 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_native_splash:
+  color: "#2b3e2b"
+  image: assets/images/sitalogo.png
+#  branding: assets/images/sitalogo.png
+#  branding_bottom_padding: 24
+  color_dark: "#2b3e2b"
+  image_dark: assets/images/sitalogo.png
+#  branding_dark: assets/images/sitalogo.png
+
+  android_12:
+    image: assets/images/sitalogo.png
+    icon_background_color: "#2b3e2b"
+    image_dark: assets/images/sitalogo.png
+    icon_background_color_dark: "#2b3e2b"
+
+  web: false

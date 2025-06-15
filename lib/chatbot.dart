@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:chat_bot/Speech_Page.dart';
@@ -52,7 +53,9 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   bool _speechEnabled = true;
   String _lastWords = '';
-
+  // ----
+  DateTime? _lastApiCallTime;
+  Timer? _apiCooldownTimer;
   @override
   void initState()   {
     super.initState();
@@ -82,7 +85,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     _animationController.dispose();
     languageIdentifier.close();
     _scrollController.dispose();
-    super.dispose();
+    _apiCooldownTimer?.cancel();
+     super.dispose();
   }
 
   Future<void> speak(String text, String langCode) async {
@@ -472,28 +476,76 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       onResult: _onSpeechResult,
       // listenFor: const Duration(minutes: 2),
       // localeId: 'en_US',
-      // localeId: 'es_ES', // Spanish (Spain)
+      localeId: 'es_ES', // Spanish (Spain)
     );
     setState(() {});
   }
 
   void _stopListening() async {
     await _speechToText.stop();
-    print('_stopListening');
+     print('_stopListening');
     setState(() {});
   }
 
-  void _onSpeechResult(SpeechRecognitionResult result) {
+  /*void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
       _lastWords = result.recognizedWords.trim();
-      // if (!_speechToText.isListening) {
-      //   detectLanguage(_lastWords);
-      // }
       if (_lastWords.isNotEmpty && !_speechToText.isListening) {
         _stopListening();
         detectLanguage(_lastWords);
       }
     });
+  }*/
+
+  void _onSpeechResult(SpeechRecognitionResult result) async {
+    final newWords = result.recognizedWords.trim();
+
+    if (newWords.isEmpty) return;
+
+    setState(() {
+      _lastWords = newWords;
+    });
+
+    // Check API cooldown
+    if (_isOnCooldown()) {
+      _showCooldownMessage();
+      return;
+    }
+
+    // Only process if speech stopped and we have valid input
+    if (!_speechToText.isListening) {
+      _stopListening();
+      _startApiCooldown();
+      detectLanguage(_lastWords);
+    }
+  }
+
+  bool _isOnCooldown() {
+    return _lastApiCallTime != null &&
+        DateTime.now().difference(_lastApiCallTime!) < Duration(seconds: 5);
+  }
+
+  void _startApiCooldown() {
+    _lastApiCallTime = DateTime.now();
+
+    // Update UI every second during cooldown
+    _apiCooldownTimer?.cancel();
+    _apiCooldownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (!_isOnCooldown()) {
+        timer.cancel();
+        setState(() {});
+      } else {
+        setState(() {});
+      }
+    });
+  }
+
+  void _showCooldownMessage() {
+    final remaining = 5 - DateTime.now().difference(_lastApiCallTime!).inSeconds;
+    // Fluttertoast.showToast(
+    //   msg: "Please wait $remaining seconds before speaking again",
+    //   toastLength: Toast.LENGTH_SHORT,
+    // );
   }
   void _triggerVibration() async {
     // await Haptics.vibrate(HapticsType.success); // iOS-specific

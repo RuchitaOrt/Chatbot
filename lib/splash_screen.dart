@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'Speech_Page.dart';
 
 class SplashScreen extends StatefulWidget {
-  static const String route = "/";
+  static const String route = "/splash";
 
   const SplashScreen({super.key});
 
@@ -83,8 +83,8 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     final height = MediaQuery.of(context).size.height;
-
     return Scaffold(
+      backgroundColor: Color(0xff2b3e2b),
       body: Container(
         width: SizeConfig.blockSizeHorizontal * 100,
         decoration: BoxDecoration(color: Color(0xff2b3e2b)),

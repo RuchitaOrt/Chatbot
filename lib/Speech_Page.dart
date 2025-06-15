@@ -13,12 +13,17 @@ import 'package:vibration/vibration.dart';
 import 'SpeechProvider.dart';
 
 class Speech_Page extends StatefulWidget {
+  static const String route = "/speech";
+  const Speech_Page({super.key});
   // Speech_Page({Key key}) : super(key: key);
   @override
   State<Speech_Page> createState() => _Speech_page_State();
 }
 
-class _Speech_page_State extends State<Speech_Page> {
+class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
   ///library
   SpeechToText _speechToText  = SpeechToText();
   bool _speechEnabled = false;
@@ -27,161 +32,187 @@ class _Speech_page_State extends State<Speech_Page> {
   @override
   void initState() {
      _initSpeech();
+     _controller = AnimationController(
+       vsync: this,
+       duration: Duration(seconds: 2),
+     );
+     _animation = CurvedAnimation(
+       parent: _controller,
+       curve: Curves.easeInOut,
+     )..addStatusListener((status) {
+       // if (status == AnimationStatus.completed) {
+       //   Navigator.pushReplacementNamed(context, Speech_Page.route);
+       // }
+     });
+
+     _controller.forward();
     super.initState();
   }
 
   @override
   void dispose() {
     _speechToText.stop();
+    _controller.dispose();
     super.dispose();
   }
 
-  @override
-  void setState(VoidCallback fn) {
-    if (mounted) {
-      super.setState(fn);
-    }
-  }
+  // @override
+  // void setState(VoidCallback fn) {
+  //   if (mounted) {
+  //     super.setState(fn);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
     // SizeConfig().init(context);
     // final height = MediaQuery.of(context).size.height;
     // final width = MediaQuery.of(context).size.width;
-     return Scaffold(
-      appBar: AppBar(
-        backgroundColor:Color(0xff2b3e2b),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-                onPressed: (() {
-                  _stopListening();
-                  _getOutOfApp();
-                }),
-                icon: Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Colors.white,
-                )),
-            Text("AI Bot", style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
-            Image.asset(
-              "assets/images/sitalogo.png",
-              height: 45,
-              width: 45,
-            ),
-          ],
-        ),
-        centerTitle: true,
-      ),
-      body: Container(
-        width: SizeConfig.blockSizeHorizontal * 100,
-        // decoration: BoxDecoration(color: Color(0xff2b3e2b)),
-        decoration: BoxDecoration(color: Colors.white),
-        padding: EdgeInsets.symmetric(horizontal: 12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            SizedBox(
-              height: 46,
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                 Container(
-                  width: double.infinity,
-                  child: Lottie.asset('assets/images/anim_bot.json',
-                      height: 250,
-                      animate: !_speechToText!.isListening),
-                 ),
-              ],
-            ),
-            SizedBox(
-              height: 8,
-            ),
-            Container(
-              child: Text(
-                _speechToText.isListening ? 'Listening...' : _lastWords,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black),
+     return WillPopScope(
+       onWillPop: () async{
+         _getOutOfApp();
+         return false;
+       },
+       child: Scaffold(
+         backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor:Color(0xff2b3e2b),
+          automaticallyImplyLeading: false, // Hides the back arrow
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                  onPressed: (() {
+                    _stopListening();
+                    _getOutOfApp();
+                  }),
+                  icon: Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white,
+                  )),
+              Text("AI Bot", style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
+              Image.asset(
+                "assets/images/sitalogo.png",
+                height: 45,
+                width: 45,
               ),
-            ),
-            Spacer(),
-            Container(
-              width: double.infinity,
-              // color: Colors.blue,
-              child: Column(
+            ],
+          ),
+          centerTitle: true,
+        ),
+        body: FadeTransition(
+          opacity: _animation,
+          child: Container(
+            width: SizeConfig.blockSizeHorizontal * 100,
+            // decoration: BoxDecoration(color: Color(0xff2b3e2b)),
+            decoration: BoxDecoration(color: Colors.white),
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                SizedBox(
+                  height: 46,
+                ),
+                Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      child: Text(
-                        _speechToText.isListening ? 'Try Saying...' : '',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    Container(
-                      child: Text(
-                        _speechToText!.isListening
-                            ? ''
-                            : 'How can I help you?',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    GestureDetector(
-                      onTap: (() {
-                        _speechToText.isNotListening
-                            ? _startListening()
-                            : _stopListening();
-                      }),
-                      child: Container(
-                        child: Lottie.asset('assets/images/speech_anim.json',
-                            height: 95,
-                            width: 95,
-                            animate: _speechToText!.isListening),
-                       ),
-                    ),
-                    SizedBox(
-                      height: 4,
-                    ),
-                    Container(
-                      child: Text(
-                        _speechToText!.isNotListening
-                            ? 'Tap the microphone to speak'
-                            : '',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 56,
-                    ),
-                  ]),
+                     Container(
+                      width: double.infinity,
+                      child: Lottie.asset('assets/images/anim_bot.json',
+                          height: 250,
+                          animate: _speechToText.isNotListening),
+                     ),
+                  ],
+                ),
+                SizedBox(
+                  height: 8,
+                ),
+                Container(
+                  child: Text(
+                    _speechToText.isListening ? 'Listening...' : _lastWords,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                  ),
+                ),
+                Spacer(),
+                Container(
+                  width: double.infinity,
+                  // color: Colors.blue,
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          child: Text(
+                            _speechToText.isListening ? 'Try Saying...' : '',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 8,
+                        ),
+                        Container(
+                          child: Text(
+                            _speechToText!.isListening
+                                ? ''
+                                : 'How can I help you?',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 8,
+                        ),
+                        GestureDetector(
+                          onTap: (() {
+                            _speechToText.isNotListening
+                                ? _startListening()
+                                : _stopListening();
+                          }),
+                          child: Container(
+                            child: Lottie.asset('assets/images/speech_anim.json',
+                                height: 95,
+                                width: 95,
+                                animate: _speechToText!.isListening),
+                           ),
+                        ),
+                        SizedBox(
+                          height: 4,
+                        ),
+                        Container(
+                          child: Text(
+                            _speechToText!.isNotListening
+                                ? 'Tap the microphone to speak'
+                                : '',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 56,
+                        ),
+                      ]),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
-    );
+           ),
+     );
   }
 
   void _initSpeech() async {
@@ -191,9 +222,9 @@ class _Speech_page_State extends State<Speech_Page> {
       speechProvider.updateStatus("Status: $status",_speechToText);
       testVibrate();
     }, onError: (error) async {
-      print('Error Speech_initSpeech  $error');
+       print('Error Speech_initSpeech  $error');
       speechProvider.updateStatus("Error: $error",_speechToText);
-      _stopListening();
+
     });
     // _startListening();
     speechProvider.setInitialized(true);
@@ -203,16 +234,17 @@ class _Speech_page_State extends State<Speech_Page> {
   void _startListening() async {
     await _speechToText.listen(
       onResult: _onSpeechResult,
-      // localeId: 'es_ES', // Spanish (Spain)
+      localeId: 'es_ES', // Spanish (Spain)
       // listenFor: const Duration(minutes: 2),
       // localeId: 'en_US',
     );
     setState(() {});
   }
   void _stopListening() async {
-    await _speechToText!.stop();
     print('_stopListening');
-    setState(() {});
+    await _speechToText.stop();
+    setState(() {
+    });
   }
 
   void _onSpeechResult(SpeechRecognitionResult result) {

@@ -1,9 +1,9 @@
 import 'package:chat_bot/AllLanguageChatbot.dart';
+import 'package:chat_bot/Speech_Page.dart';
 import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/onboardingScreen.dart';
 import 'package:chat_bot/splash_screen.dart';
 import 'package:flutter/material.dart';
-
 
 class Routers {
   // Create a static method to configure the router
@@ -15,17 +15,23 @@ class Routers {
         return MaterialPageRoute(
           builder: (_) => Onboardingscreen(),
         );
-     case Chatbot.route:
+      case Chatbot.route:
         return MaterialPageRoute(
-          builder: (_) => Chatbot(selectedIndex: 1,),
+          builder: (_) => Chatbot(
+            selectedIndex: 1,
+          ),
         );
-         case AllLanguageChatbot.route:
+      case AllLanguageChatbot.route:
         return MaterialPageRoute(
           builder: (_) => AllLanguageChatbot(),
         );
-         case SplashScreen.route:
+      case SplashScreen.route:
         return MaterialPageRoute(
           builder: (_) => SplashScreen(),
+        );
+      case Speech_Page.route:
+        return MaterialPageRoute(
+          builder: (_) => Speech_Page(),
         );
       default:
         return MaterialPageRoute(builder: (_) => Onboardingscreen());

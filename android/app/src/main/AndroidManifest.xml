@@ -4,8 +4,10 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
+        android:enableOnBackInvokedCallback="true"
         android:label="SITA AI"
         android:name="${applicationName}"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/sita_launcher">
         <activity
             android:name=".MainActivity"
