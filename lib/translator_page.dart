@@ -19,6 +19,7 @@ import 'package:translator/translator.dart';
 import 'package:vibration/vibration.dart';
 import 'SingleLanguage.dart';
 import 'SpeechProvider.dart';
+import 'main.dart';
 
 class Translator_Page extends StatefulWidget {
   // const Translator_Page({super.key});
@@ -62,6 +63,7 @@ class _Translator_PageState extends State<Translator_Page>
   // ---
   final Map<String, String> languages = {
     // Indian Languages (with country code)
+    'Select Language': 'demo',
     'Hindi': 'hi_IN',
     'Bengali': 'bn_IN',
     'Telugu': 'te_IN',
@@ -88,8 +90,8 @@ class _Translator_PageState extends State<Translator_Page>
     'Thai': 'th_TH',
   };
 
-  String selectedLanguage = 'Hindi';
-  String _detectedLang = 'hi_IN';
+  String selectedLanguage = 'Select Language';
+  String _detectedLang = 'demo';
 
   // List<stt.LocaleName> _availableLocales = [];
   // String? _selectedLocaleId;
@@ -183,34 +185,41 @@ class _Translator_PageState extends State<Translator_Page>
                         color: Colors.white, fontWeight: FontWeight.bold)),
                 Spacer(),
                 // Dropdown Button with both name and code
-                DropdownButton<String>(
-                  value: selectedLanguage,
-                  dropdownColor: Color(0xff2b3e2b),
-                  underline: SizedBox(),
-                  icon: Icon(Icons.arrow_drop_down, color: Colors.white),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.normal,
+                Visibility(
+                  visible: false,
+                  child: DropdownButton<String>(
+                    value: selectedLanguage,
+                    dropdownColor: Color(0xff2b3e2b),
+                    underline: SizedBox(),
+                    icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
+                    ),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedLanguage = newValue!;
+                        _detectedLang = languages[newValue]!;
+                        print('Selected: $selectedLanguage ($_detectedLang)');
+                      });
+                    },
+                    items: languages.entries.map((entry) {
+                      return DropdownMenuItem<String>(
+                        value: entry.key,
+                        child: Text(
+                          // '${entry.key} (${entry.value.toUpperCase()})',
+                          '${entry.key}',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      );
+                    }).toList(),
                   ),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedLanguage = newValue!;
-                      _detectedLang = languages[newValue]!;
-                      print('Selected: $selectedLanguage ($_detectedLang)');
-
-                    });
-                  },
-                  items: languages.entries.map((entry) {
-                    return DropdownMenuItem<String>(
-                      value: entry.key,
-                      child: Text(
-                        // '${entry.key} (${entry.value.toUpperCase()})',
-                        '${entry.key}',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    );
-                  }).toList(),
+                ),
+                Image.asset(
+                  "assets/images/sitalogo.png",
+                  height: 45,
+                  width: 45,
                 ),
               ],
             ),
@@ -370,7 +379,7 @@ class _Translator_PageState extends State<Translator_Page>
             ),
             if (!isUser)
               Visibility(
-                visible: false,
+                visible: true,
                 child: IconButton(
                   icon: const Icon(
                     Icons.volume_up,
@@ -380,8 +389,7 @@ class _Translator_PageState extends State<Translator_Page>
                   // onPressed: () => speak(message, _detectedLang),
                   onPressed: () async {
                     _stopListening();
-                    _detectedLang =
-                        await languageIdentifier.identifyLanguage(message);
+                    // _detectedLang = await languageIdentifier.identifyLanguage(message);
                     await flutterTts.stop();
                     speakmessage(message, context);
                   },
@@ -397,7 +405,6 @@ class _Translator_PageState extends State<Translator_Page>
       ],
     );
   }
-
 
   Future<void> detectLanguage(String inputText) async {
     var connectivityResult = await Connectivity().checkConnectivity();
@@ -433,7 +440,7 @@ class _Translator_PageState extends State<Translator_Page>
         final decoded = jsonDecode(response.body);
         List<SingleLanguage> languages = parseSingleLanguageList(decoded);
         final time = TimeOfDay.now().format(context);
-        _detectedLang = languages.first.language;
+        // _detectedLang = languages.first.language;
         setState(() {
           //USER
           messages.add({
@@ -490,7 +497,7 @@ class _Translator_PageState extends State<Translator_Page>
   }
 
   void _initSpeech() async {
-    await flutterTts.setLanguage(_detectedLang);
+    await flutterTts.setLanguage(_detectedLang == 'demo' ? 'en' : 'en');
     await flutterTts.setPitch(1.0);
     await flutterTts.setSpeechRate(0.5);
     final speechProvider = Provider.of<SpeechProvider>(context, listen: false);
@@ -510,9 +517,11 @@ class _Translator_PageState extends State<Translator_Page>
 
   Future<void> speakmessage(String message, BuildContext context) async {
     try {
-      await flutterTts.setLanguage(_detectedLang);
+      // await flutterTts.setLanguage(_detectedLang);
+      await flutterTts.setLanguage('en');
       // Check if TTS is available before speaking
-      var isAvailable = await flutterTts.isLanguageAvailable(_detectedLang);
+      // var isAvailable = await flutterTts.isLanguageAvailable(_detectedLang);
+      var isAvailable = await flutterTts.isLanguageAvailable('en');
       if (!isAvailable) {
         _showUnsupportedMessage(context);
         return;
@@ -557,17 +566,20 @@ class _Translator_PageState extends State<Translator_Page>
       ),
       (Route route) => false,
     );
+    /*Navigator.of(
+      routeGlobalKey.currentContext!,
+    ).pushNamed(Onboardingscreen.route);*/
   }
 
 //
 
   void _startListening() async {
     await _speechToText.listen(
-      onResult: _onSpeechResult,
-      // listenFor: const Duration(minutes: 2),
-      localeId: _detectedLang,
-      // localeId: 'es_ES', // Spanish (Spain)
-    );
+        onResult: _onSpeechResult,
+        // listenFor: const Duration(minutes: 2),
+        localeId: _detectedLang != 'demo' ? _detectedLang : ''
+        // localeId: 'es_ES', // Spanish (Spain)
+        );
     setState(() {});
   }
 

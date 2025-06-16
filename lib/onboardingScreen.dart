@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:vibration/vibration.dart';
 
+import 'RecordingPage.dart';
 import 'SpeechProvider.dart';
 
 class Onboardingscreen extends StatefulWidget {
@@ -50,10 +51,28 @@ class _OnboardingscreenState extends State<Onboardingscreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Opacity(
-                  opacity: 0.0,
+                  opacity: 1.0,
                   child: IconButton(
                       onPressed: (() {
-                        // _getOutOfApp();
+                        Navigator.of(context).pushAndRemoveUntil(
+                          PageRouteBuilder(
+                            transitionDuration: Duration(milliseconds: 500),
+                            pageBuilder: (context, animation, secondaryAnimation) =>
+                                RecordingPage(),
+                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                              final opacity = animation.drive(
+                                Tween<double>(begin: 0.0, end: 1.0).chain(
+                                  CurveTween(curve: Curves.easeInOut),
+                                ),
+                              );
+                              return FadeTransition(
+                                opacity: opacity,
+                                child: child,
+                              );
+                            },
+                          ),
+                              (Route route) => false,
+                        );
                       }),
                       icon: Icon(
                         Icons.arrow_back_ios_new,
@@ -255,9 +274,10 @@ class _OnboardingscreenState extends State<Onboardingscreen> {
         onStatus: (status) {
           print('status onboarding_initSpeech');
           speechProvider.updateStatus("Status: $status", speechToText);
-          if (status == 'listening' && !speechToText.isListening) {
-            testVibrate();
-          }
+          // if (status == 'listening' && !speechToText.isListening) {
+          //
+          // }
+          testVibrate();
         },
         onError: (error) async {
           print('Error onboarding_initSpeech $error');

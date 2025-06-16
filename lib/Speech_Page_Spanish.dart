@@ -278,32 +278,39 @@ class _Speech_Page_Spanish_State extends State<Speech_Page_Spanish> with SingleT
   }
 
   void _getOutOfApp() {
-   /* if (Platform.isIOS) {
-      try {
-        exit(0);
-      } catch (e) {
-        SystemNavigator
-            .pop(); // for IOS, not true this, you can make comment this :)
-      }
-    } else {
-      try {
-        SystemNavigator.pop(); // sometimes it cant exit app
-      } catch (e) {
-        exit(0); // so i am giving crash to app ... sad :(
-      }
-    }*/
-    Navigator.of(
-      routeGlobalKey.currentContext!,
-    ).pushNamed(Onboardingscreen.route);
+
+    // Navigator.of(
+    //   routeGlobalKey.currentContext!,
+    // ).pushNamed(Onboardingscreen.route);
+
+    Navigator.of(context).pushAndRemoveUntil(
+      PageRouteBuilder(
+        transitionDuration: Duration(milliseconds: 500),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            Onboardingscreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final opacity = animation.drive(
+            Tween<double>(begin: 0.0, end: 1.0).chain(
+              CurveTween(curve: Curves.easeInOut),
+            ),
+          );
+          return FadeTransition(
+            opacity: opacity,
+            child: child,
+          );
+        },
+      ),
+          (Route route) => false,
+    );
   }
   void testVibrate() async {
-    await Haptics.vibrate(HapticsType.success); // iOS-specific
+ /*   await Haptics.vibrate(HapticsType.success); // iOS-specific
     if (await Vibration.hasVibrator() ?? false) {
       Vibration.vibrate(duration: 100);
       print('Vibration triggered.');
     } else {
       print('Device does not support vibration.');
-    }
+    }*/
   }
 
 }

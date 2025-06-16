@@ -291,9 +291,29 @@ class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderSta
         exit(0); // so i am giving crash to app ... sad :(
       }
     }*/
-    Navigator.of(
-      routeGlobalKey.currentContext!,
-    ).pushNamed(Onboardingscreen.route);
+    // Navigator.of(
+    //   routeGlobalKey.currentContext!,
+    // ).pushNamed(Onboardingscreen.route);
+    Navigator.of(context).pushAndRemoveUntil(
+      PageRouteBuilder(
+        transitionDuration: Duration(milliseconds: 500),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            Onboardingscreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final opacity = animation.drive(
+            Tween<double>(begin: 0.0, end: 1.0).chain(
+              CurveTween(curve: Curves.easeInOut),
+            ),
+          );
+          return FadeTransition(
+            opacity: opacity,
+            child: child,
+          );
+        },
+      ),
+          (Route route) => false,
+    );
+
   }
   void testVibrate() async {
     await Haptics.vibrate(HapticsType.success); // iOS-specific
