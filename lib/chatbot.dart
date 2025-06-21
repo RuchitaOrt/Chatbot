@@ -1,31 +1,53 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:chat_bot/APIService.dart';
+import 'package:chat_bot/OnboardingScreenUI.dart';
 import 'package:chat_bot/Speech_Page.dart';
+import 'package:chat_bot/main.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
+import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
+
 import 'package:http/http.dart' as http;
+import 'package:lottie/lottie.dart';
+import 'package:mime/mime.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+
 import 'package:provider/provider.dart';
+
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
 import 'package:translator/translator.dart';
-import 'package:vibration/vibration.dart';
+
 import 'SingleLanguage.dart';
+
 import 'SpeechProvider.dart';
+
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart'; // Make sure you added mime dependency in pubspec.yaml
+import 'package:path/path.dart'; // For basename()
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class Chatbot extends StatefulWidget {
   // const Chatbot({super.key});
-  Chatbot({super.key, required this.selectedIndex, this.speechdata});
+  Chatbot({super.key, required this.selectedIndex, this.speechdata,this.languageName,this.replydata});
 
   static const String route = "/chatBot";
   int selectedIndex = 0;
   String? speechdata = '';
+  String? replydata = '';
+  String? languageName = '';
+ 
 
   @override
   State<Chatbot> createState() => _ChatbotState();
@@ -33,6 +55,11 @@ class Chatbot extends StatefulWidget {
 
 class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   final FlutterTts flutterTts = FlutterTts();
+   bool _isRecording = false;
+   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
+
+  String _recognizedText = '';
+  String? _audioFilePath;
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode(); // Declare a FocusNode
   // final stt.SpeechToText _speech = stt.SpeechToText();
@@ -48,7 +75,6 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   late Animation<double> _micGlowAnimation;
   List<Map<String, String>> messages = [];
 
-
   // ----
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   bool _speechEnabled = true;
@@ -56,9 +82,14 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   // ----
   DateTime? _lastApiCallTime;
   Timer? _apiCooldownTimer;
+   Future<void> _initPermissions() async {
+    await Permission.microphone.request();
+    await _recorder.openRecorder();
+  }
   @override
   void initState()   {
     super.initState();
+    _initPermissions();
     _initSpeech();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
@@ -72,7 +103,27 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
         // normal
       } else if (widget.selectedIndex == 2) {
         _detectedLang = await languageIdentifier.identifyLanguage(widget.speechdata!);
-         detectLanguage(widget.speechdata!);
+        //  detectLanguage(widget.speechdata!);
+        final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+         setState(() {
+          messages.add({
+            "message": widget.speechdata!,
+            "isUser": "true",
+            "time": '$time ${widget.languageName}'
+          });
+        });
+        _scrollToBottom();
+        // Speak in detected language
+         setState(() {
+          messages.add({
+            "message": widget.replydata!,
+            "isUser": "false",
+            "time": '$time ${widget.languageName}'
+          });
+        });
+        speakmessage(widget.replydata!, routeGlobalKey.currentContext!);
+        _scrollToBottom();
+        dismissKeyboard();
         widget.selectedIndex = 1;
       }
     });
@@ -119,35 +170,49 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
       },
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: const Color(0xFFEAF5F5),
+            backgroundColor: Color(0xffF9F7F0),
+          // backgroundColor: const Color(0xFFEAF5F5),
           appBar: AppBar(
             automaticallyImplyLeading: false, // Hides the back arrow
-            backgroundColor: Color(0xff2b3e2b),
+            // backgroundColor: Color(0xff2b3e2b),
+             backgroundColor: Color(0xffF9F7F0),
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                    onPressed: (() {
-                      _getOutOfApp();
-                    }),
-                    icon: Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Colors.white,
-                    )),
-                Text("AI Bot",
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
-                Image.asset(
+                // IconButton(
+                //     onPressed: (() {
+                //       _getOutOfApp();
+                //     }),
+                //     icon: Icon(
+                //       Icons.arrow_back_ios_new,
+                //       color: Color(0xff2b3e2b),
+                //     )),
+                 Image.asset(
                   "assets/images/sitalogo.png",
                   height: 45,
                   width: 45,
                 ),
+                Text("AI Bot",
+                    style: TextStyle(
+                        color: Color(0xff2b3e2b), fontWeight: FontWeight.bold)),
+                // Image.asset(
+                //   "assets/images/sitalogo.png",
+                //   height: 45,
+                //   width: 45,
+                // ),
+                GestureDetector(
+                  onTap: ()
+                  {
+                    _getOutOfApp();
+                  },
+                  child: Icon(Icons.replay))
               ],
             ),
-            centerTitle: true,
+            // centerTitle: true,
           ),
           body: Column(
             children: [
+              Divider(),
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
@@ -174,7 +239,9 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                 ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                color: Color(0xff2b3e2b),
+                color:
+                 Color(0xffF9F7F0),
+                //  Color(0xff2b3e2b),
                 child: Row(
                   children: [
                     Expanded(
@@ -183,65 +250,86 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(25),
+                           border: Border.all(
+      color: Color(0xff436043), // ✅ Your desired border color
+      width: 1.5,               // Optional: adjust thickness
+    ),
                         ),
-                        child: TextField(
+                        child:
+                         TextField(
                           controller: _controller,
                           maxLines: 1,
                           focusNode: _focusNode,
                           style: TextStyle(fontSize: 14),
+                          
                           decoration: const InputDecoration.collapsed(
+                            
                               hintText: "Write anything here..."),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () async {
-                        await flutterTts.stop();
-                        var status = await Permission.microphone.request();
-                        if (status != PermissionStatus.granted) {
-                          Fluttertoast.showToast(
-                            msg: "Microphone permission not granted",
-                            toastLength: Toast.LENGTH_SHORT,
-                          );
-                          return;
-                        } else {
-                          // speechProvider.speechToText.isListening
-                          speechProvider.speechToText?.isListening ?? false
-                              ? _stopListening()
-                              : _startListening();
-                          return;
-                        }
-                      },
-                      child: AnimatedBuilder(
-                        animation: _micGlowAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: speechProvider.speechToText?.isListening ?? false
-                                ? _micGlowAnimation.value
-                                : 1.0,
-                            child: child,
-                          );
-                        },
-                        child: Icon(
-                          speechProvider.speechToText?.isListening ?? false? Icons.mic: Icons.mic_off,
-                          size: 30,
-                          color:speechProvider.speechToText?.isListening ?? false ? Colors.red : Colors.white,
-                          // color: _isListening ? Colors.red : Color(0xff2b3e2b),
-                        ),
-                      ),
-                    ),
+                    // GestureDetector(
+                    //   onTap: () async {
+                    //     await flutterTts.stop();
+                    //     var status = await Permission.microphone.request();
+                    //     if (status != PermissionStatus.granted) {
+                    //       Fluttertoast.showToast(
+                    //         msg: "Microphone permission not granted",
+                    //         toastLength: Toast.LENGTH_SHORT,
+                    //       );
+                    //       return;
+                    //     } else {
+                    //       // speechProvider.speechToText.isListening
+                    //       speechProvider.speechToText?.isListening ?? false
+                    //           ? _stopListening()
+                    //           : _startListening();
+                    //       return;
+                    //     }
+                    //   },
+                    //   child: AnimatedBuilder(
+                    //     animation: _micGlowAnimation,
+                    //     builder: (context, child) {
+                    //       return Transform.scale(
+                    //         scale: speechProvider.speechToText?.isListening ?? false
+                    //             ? _micGlowAnimation.value
+                    //             : 1.0,
+                    //         child: child,
+                    //       );
+                    //     },
+                    //     child: Icon(
+                    //       speechProvider.speechToText?.isListening ?? false? Icons.mic: Icons.mic_off,
+                    //       size: 30,
+                    //       color:speechProvider.speechToText?.isListening ?? false ? Colors.red : Colors.white,
+                    //       // color: _isListening ? Colors.red : Color(0xff2b3e2b),
+                    //     ),
+                    //   ),
+                    // ),
+                     GestureDetector(
+              onLongPressStart: (_) => _startListening(),
+              onLongPressEnd: (_) => _stopListening(),
+              child: Container(
+                child: Lottie.asset(
+                  'assets/images/speech_anim.json',
+                  height: 40,
+                  width: 40,
+                  animate: _isRecording,
+                ),
+              ),
+            ),
                     const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(
                         Icons.send,
-                        color: Colors.white,
+                        color: Color(0xff2b3e2b),
                       ),
                       onPressed: () async {
                         await flutterTts.stop();
                         final text = _controller.text.trim();
                         if (text.isNotEmpty) {
-                          detectLanguage(text);
+                          // detectLanguage(text);
+                                dismissKeyboard();
+                          uploadAudioFile1(null,text,);
                           _controller.clear();
                           // _hasSentSpeechResult = true;
                         }
@@ -272,7 +360,9 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                 margin: const EdgeInsets.symmetric(vertical: 6),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isUser ? Colors.teal[50] : Colors.grey[300],
+                  color: 
+                  isUser ? Color(0xffE3D9B5) : Colors.grey[300],
+                  //isUser ? Colors.teal[50] : Colors.grey[300],
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -301,7 +391,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                   _stopListening();
                   _detectedLang = await languageIdentifier.identifyLanguage(message);
                   await flutterTts.stop();
-                  speakmessage(message, context);
+                  speakmessage(message, routeGlobalKey.currentContext!);
                 },
               ),
           ],
@@ -347,7 +437,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
         print('Language Detection Response: $responseData');
         final decoded = jsonDecode(response.body);
         List<SingleLanguage> languages = parseSingleLanguageList(decoded);
-        final time = TimeOfDay.now().format(context);
+        final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
         _detectedLang = languages.first.language;
         setState(() {
           //USER
@@ -370,7 +460,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
         });
         _scrollToBottom();
         // Speak in detected language
-        speakmessage(botReply, context);
+        speakmessage(botReply, routeGlobalKey.currentContext!);
         _scrollToBottom();
         dismissKeyboard();
       } else {
@@ -402,6 +492,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     }
     return [];
   }
+
 
   void _initSpeech() async {
     await flutterTts.setLanguage(_detectedLang);
@@ -453,10 +544,10 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
 
   Future<void> _getOutOfApp() async {
     await flutterTts.stop();
-    Navigator.of(context).pushAndRemoveUntil(
+    Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: 500),
-        pageBuilder: (context, animation, secondaryAnimation) => Speech_Page(),
+        pageBuilder: (context, animation, secondaryAnimation) => OnboardingScreenUI(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           final opacity = animation.drive(
             Tween<double>(begin: 0.0, end: 1.0).chain(
@@ -475,21 +566,183 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
 
 //
 
-  void _startListening() async {
-    await _speechToText.listen(
-      onResult: _onSpeechResult,
-      // listenFor: const Duration(minutes: 2),
-      // localeId: 'en_US',
-      // localeId: 'es_ES', // Spanish (Spain)
-    );
-    setState(() {});
+  Future<void> _startListening() async {
+    if (!_isRecording) {
+      final dir = await getApplicationDocumentsDirectory();
+      _audioFilePath =
+          '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.mp4';
+
+      await _recorder.startRecorder(
+        toFile: _audioFilePath,
+        codec: Codec.aacMP4,
+        sampleRate: 44100,
+      );
+
+      await _speechToText.listen(
+        onResult: (result) {
+          setState(() {
+            _recognizedText = result.recognizedWords;
+              print("_recognizedText");
+            print(_recognizedText);
+          });
+        },
+      );
+
+      setState(() {
+        _isRecording = true;
+      });
+    }
   }
 
-  void _stopListening() async {
-    await _speechToText.stop();
-     print('_stopListening');
-    setState(() {});
+  Future<void> _stopListening() async {
+    if (_isRecording) {
+      await _speechToText.stop();
+      await _recorder.stopRecorder();
+
+      setState(() {
+        _isRecording = false;
+      });
+
+      if (_audioFilePath != null && await File(_audioFilePath!).exists()) {
+        print("✅ File exists at: $_audioFilePath");
+
+        final mp3Path = await _convertToMp3(_audioFilePath!);
+
+        if (mp3Path != null) {
+          uploadAudioFile1(File(mp3Path),_recognizedText); // Your API upload logic
+        } else {
+          print("❌ Failed to convert to MP3.");
+        }
+      } else {
+        print("❌ File does not exist.");
+      }
+    }
   }
+
+Future<void> uploadAudioFile1(File? file,String text) async {
+  try {
+    
+        
+    var uri = Uri.parse("http://chatbot.khushiyaann.com/api/apiapp/speech_to_text_translate");
+
+    var request = http.MultipartRequest('POST', uri);
+
+    // Get mime type (optional, can be omitted if server doesn't require it)
+    
+     print("API HITTED");
+    // Attach file
+     request.fields['text_prompt'] =text;
+    request.fields['language_name_text'] =  widget.languageName!;
+
+    if(file!=null)
+    {final mimeType = lookupMimeType(file.path); // e.g., "audio/mp3"
+    final fileName = basename(file.path); // e.g., audio.mp3
+ request.files.add(await http.MultipartFile.fromPath(
+      'audio', // Must match backend key
+      file.path,
+      contentType: mimeType != null
+          ? MediaType.parse(mimeType)
+          : MediaType('application', 'octet-stream'),
+      filename: fileName,
+    ));
+
+    }
+   
+    // Optional headers (do not set Content-Type manually here)
+    request.headers.addAll({
+      "Accept": "*/*",
+    });
+
+    // Send request
+    var response = await request.send();
+ print("API HITTED ${response}");
+    if (response.statusCode == 200) {
+   
+      final respStr = await response.stream.bytesToString();
+         final Map<String, dynamic> jsonResponse = json.decode(respStr);
+  final String question = jsonResponse['question'];
+   final String content = jsonResponse['content'];
+    final String languageName = jsonResponse['check_lanuage_response']
+      ?['data']?[0]?['single_language']?[0]?['language'] ?? '';
+  print("🟢 Question: $question");
+  setState(() {
+      final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+          messages.add({
+            "message": question,
+            "isUser": "true",
+            "time": '$time '
+          });
+        });
+        _scrollToBottom();
+        // _scrollToBottom();
+        // Speak in detected language
+         final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+         setState(() {
+          messages.add({
+            "message": content,
+            "isUser": "false",
+            "time": '$time ${languageName}'
+          });
+        });
+        speakmessage(content, routeGlobalKey.currentContext!);
+        _scrollToBottom();
+        dismissKeyboard();
+      //  Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
+      //       MaterialPageRoute(
+      //         builder: (context) => Chatbot(
+      //           selectedIndex: 2,
+      //           speechdata: question,
+      //           replydata:content,
+      //           languageName: languageName,
+
+                
+                
+      //         ),
+      //       ),
+      //     (Route route) => false,
+      //     );
+  
+      print('✅ Success: $respStr');
+    } else {
+      final errorResp = await response.stream.bytesToString();
+      print('❌ Server error ${response.statusCode}: $errorResp');
+    }
+  } catch (e) {
+    print("❌ Exception: $e");
+  }
+}
+
+  Future<String?> _convertToMp3(String inputPath) async {
+    final mp3Path = inputPath.replaceAll(".mp4", ".mp3");
+
+    final session = await FFmpegKit.execute(
+        '-i $inputPath -codec:a libmp3lame -qscale:a 2 $mp3Path');
+
+    final returnCode = await session.getReturnCode();
+
+    if (ReturnCode.isSuccess(returnCode)) {
+      print('✅ MP3 conversion successful: $mp3Path');
+      return mp3Path;
+    } else {
+      print('❌ MP3 conversion failed.');
+      return null;
+    }
+  }
+  // void _startListening() async {
+  //   await _speechToText.listen(
+  //     onResult: _onSpeechResult,
+  //     // listenFor: const Duration(minutes: 2),
+  //     // localeId: 'en_US',
+  //     // localeId: 'es_ES', // Spanish (Spain)
+  //   );
+  //   setState(() {});
+  // }
+
+  // void _stopListening() async {
+  //   await _speechToText.stop();
+  //    print('_stopListening');
+  //   setState(() {});
+  // }
 
   /*void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {

@@ -1,11 +1,19 @@
 import 'dart:io';
+import 'package:chat_bot/APIService.dart';
+import 'package:chat_bot/ChatSessionListPage.dart';
 import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/onboardingScreen.dart';
 import 'package:chat_bot/sizeConfig.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:lottie/lottie.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -34,6 +42,7 @@ class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderSta
   @override
   void initState() {
      _initSpeech();
+     _initPermissions();
      _controller = AnimationController(
        vsync: this,
        duration: Duration(seconds: 2),
@@ -114,25 +123,40 @@ class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderSta
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.max,
               children: [
-                SizedBox(
-                  height: 46,
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                     Container(
-                      width: double.infinity,
-                      child: Lottie.asset('assets/images/anim_bot.json',
-                          height: 250,
-                          animate: _speechToText.isNotListening),
-                     ),
-                  ],
-                ),
-                SizedBox(
-                  height: 8,
-                ),
+                // SizedBox(
+                //   height: 46,
+                // ),
+                // Column(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   crossAxisAlignment: CrossAxisAlignment.center,
+                //   mainAxisSize: MainAxisSize.min,
+                //   children: [
+                //      Container(
+                //       width: double.infinity,
+                //       child: Lottie.asset('assets/images/anim_bot.json',
+                //           height: 250,
+                //           animate: _speechToText.isNotListening),
+                //      ),
+                //   ],
+                // ),
+                // SizedBox(
+                //   height: 8,
+                // ),
+                  Text(_isListening ? "Listening..." : "Tap to start"),
+            SizedBox(height: 20),
+            ElevatedButton.icon(
+              icon: Icon(_isRecording ? Icons.stop : Icons.mic),
+              label: Text(_isRecording ? "Stop" : "Start"),
+              onPressed: _isRecording ? _stopListening : _startListening,
+            ),
+            SizedBox(height: 30),
+            Text('Recognized Text:', style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            Text(_recognizedText),
+            if (_audioFilePath != null) ...[
+              SizedBox(height: 20),
+              Text('MP4 saved at:'),
+              Text(_audioFilePath!),],
                 Container(
                   child: Text(
                     _speechToText.isListening ? 'Listening...' : _lastWords,
@@ -154,6 +178,7 @@ class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderSta
                         Container(
                           child: Text(
                             _speechToText.isListening ? 'Try Saying...' : '',
+                            
                             style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w400,
@@ -233,29 +258,226 @@ class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderSta
     setState(() {});
   }
 
-  void _startListening() async {
+  // void _startListening() async {
+  //   await _speechToText.listen(
+  //     onResult: _onSpeechResult,
+  //     // localeId: 'es_ES', // Spanish (Spain)
+  //     // listenFor: const Duration(minutes: 2),
+  //     // localeId: 'en_US',
+  //   );
+  //   setState(() {});
+  // }
+  // void _stopListening() async {
+  //   print('_stopListening');
+  //   await _speechToText.stop();
+  //   setState(() {
+  //   });
+  // }
+ 
+  final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
+  bool _isRecording = false;
+  bool _isListening = false;
+  String? _audioFilePath;
+  String _recognizedText = '';
+  Future<void> _initPermissions() async {
+    await Permission.microphone.request();
+    await _recorder.openRecorder();
+  }
+Future<void> _startListening() async {
+  if (_isRecording) return;
+
+  final dir = await getApplicationDocumentsDirectory();
+  _audioFilePath = '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.mp4';
+
+  // Start audio recording
+  await _recorder.startRecorder(
+    toFile: _audioFilePath,
+    codec: Codec.aacMP4,
+    sampleRate: 44100,
+  );
+
+  // Initialize speech recognition with status handler
+  bool available = await _speechToText.initialize(
+    onStatus: (status) async {
+      print("🔊 Status: $status");
+      if (status == 'notListening' || status == 'done') {
+        await _stopListening(); // auto-stop
+      }
+    },
+    onError: (error) {
+      print("❌ Speech Error: $error");
+    },
+  );
+
+  if (available) {
     await _speechToText.listen(
       onResult: _onSpeechResult,
-      // localeId: 'es_ES', // Spanish (Spain)
-      // listenFor: const Duration(minutes: 2),
-      // localeId: 'en_US',
+      listenFor: Duration(seconds: 10),
+      pauseFor: Duration(seconds: 2), // auto-stop after 2 sec silence
+      cancelOnError: true,
+      partialResults: true,
+      
     );
-    setState(() {});
-  }
-  void _stopListening() async {
-    print('_stopListening');
-    await _speechToText.stop();
-    setState(() {
-    });
-  }
 
-  void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
-      _lastWords = result.recognizedWords;
-      if (!_speechToText!.isListening) {
-        _stopListening();
-        if (_lastWords.isNotEmpty) {
-          Navigator.of(context).pushAndRemoveUntil(
+      _isRecording = true;
+      _isListening = true;
+    });
+  } else {
+    print('❌ Speech recognition not available');
+  }
+}
+
+  // Future<void> _startListening() async {
+  //   if (!_isRecording) {
+  //     // Get file path
+  //     final dir = await getApplicationDocumentsDirectory();
+  //     _audioFilePath = '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.mp4';
+
+  //     // Start recording audio
+  //     await _recorder.startRecorder(
+  //       toFile: _audioFilePath,
+  //       codec: Codec.aacMP4,
+  //       sampleRate: 44100,
+  //     );
+
+  //     // Start speech-to-text
+  //     await _speechToText.listen(
+  //       onResult:_onSpeechResult
+  //       //  (result) {
+  //       //   setState(() {
+  //       //     _recognizedText = result.recognizedWords;
+  //       //   });
+  //       // },
+  //     );
+
+  //     setState(() {
+  //       _isRecording = true;
+  //       _isListening = true;
+  //     });
+  //      setState(() {});
+  //   }
+  // }
+  Future<void> _stopListening() async {
+  await _speechToText.stop();
+  await _recorder.stopRecorder();
+
+  setState(() {
+    _isRecording = false;
+    _isListening = false;
+  });
+
+  if (_audioFilePath != null && await File(_audioFilePath!).exists()) {
+    print("✅ File exists at: $_audioFilePath");
+
+    final mp3Path = await _convertToMp3(_audioFilePath!);
+
+    if (mp3Path != null) {
+      // await uploadAudioFile(File(mp3Path),widget.);
+    } else {
+      print("❌ Failed to convert to MP3.");
+    }
+
+    if (_lastWords.isNotEmpty) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => Chatbot(
+            selectedIndex: 2,
+            speechdata: _lastWords,
+          ),
+        ),
+        (Route route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No speech detected. Please try again.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  } else {
+    print("❌ File does not exist.");
+  }
+}
+
+// Future<void> _stopListening() async {
+  
+ 
+//   setState(() async {
+//      await _speechToText.stop();
+//      print("Stop Listenening");
+//   await _recorder.stopRecorder();
+
+//     _isRecording = false;
+//     _isListening = false;
+//   });
+
+//   if (_audioFilePath != null && await File(_audioFilePath!).exists()) {
+//     print("✅ File exists at: $_audioFilePath");
+
+//     final mp3Path = await _convertToMp3(_audioFilePath!);
+
+//     if (mp3Path != null) {
+//       uploadAudioFile(File(mp3Path));
+//     } else {
+//       print("❌ Failed to convert to MP3.");
+//     }
+//   } else {
+//     print("❌ File does not exist.");
+//   }
+//    setState(() {});
+// }
+
+Future<String?> _convertToMp3(String inputPath) async {
+  final mp3Path = inputPath.replaceAll(".mp4", ".mp3");
+
+  final session = await FFmpegKit.execute('-i $inputPath -codec:a libmp3lame -qscale:a 2 $mp3Path');
+
+  final returnCode = await session.getReturnCode();
+
+  if (ReturnCode.isSuccess(returnCode)) {
+    print('✅ MP3 conversion successful: $mp3Path');
+    
+    return mp3Path;
+  } else {
+    print('❌ MP3 conversion failed.');
+    return null;
+  }
+}
+
+  // void _onSpeechResult(SpeechRecognitionResult result) {
+  //   setState(() {
+  //     print(_lastWords);
+  //     _lastWords = result.recognizedWords;
+  //     if (!_speechToText.isListening) {
+  //       _stopListening();
+  //       if (_lastWords.isNotEmpty) {
+  //         Navigator.of(context).pushAndRemoveUntil(
+  //           MaterialPageRoute(
+  //             builder: (context) => Chatbot(
+  //               selectedIndex: 2,
+  //               speechdata: _lastWords,
+  //             ),
+  //           ),
+  //         (Route route) => false,
+  //         );
+  //       } else {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(
+  //             content: Text('No speech detected. Please try again.'),
+  //             duration: Duration(seconds: 2),
+  //           ),
+  //         );
+  //       }
+  //     }
+  //   });
+  // }
+void _onSpeechResult(SpeechRecognitionResult result) {
+  setState(() {
+    _lastWords = result.recognizedWords;
+    print(_lastWords);
+      Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => Chatbot(
                 selectedIndex: 2,
@@ -264,17 +486,8 @@ class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderSta
             ),
           (Route route) => false,
           );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No speech detected. Please try again.'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-    });
-  }
+  });
+}
 
   void _getOutOfApp() {
    /* if (Platform.isIOS) {
@@ -298,7 +511,8 @@ class _Speech_page_State extends State<Speech_Page> with SingleTickerProviderSta
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: 500),
         pageBuilder: (context, animation, secondaryAnimation) =>
-            Onboardingscreen(),
+            // Onboardingscreen(),
+            ChatSessionListPage(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           final opacity = animation.drive(
             Tween<double>(begin: 0.0, end: 1.0).chain(

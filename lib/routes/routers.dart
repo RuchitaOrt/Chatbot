@@ -1,4 +1,8 @@
 import 'package:chat_bot/AllLanguageChatbot.dart';
+import 'package:chat_bot/ChatSessionListPage.dart';
+import 'package:chat_bot/LanguageDashboard.dart';
+import 'package:chat_bot/OnboardingScreenUI.dart';
+import 'package:chat_bot/SpeechRecordScreen.dart';
 import 'package:chat_bot/Speech_Page.dart';
 import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/onboardingScreen.dart';
@@ -48,6 +52,23 @@ class Routers {
         case Translator_Page.route:
         return MaterialPageRoute(
           builder: (_) => Translator_Page(selectedIndex: 1,),
+        );
+        case LanguageDashboard.route:
+        return MaterialPageRoute(
+          builder: (_) => LanguageDashboard(),
+        );
+        case ChatSessionListPage.route:
+        return MaterialPageRoute(
+          builder: (_) => ChatSessionListPage(),
+        );
+        case SpeechRecordScreen.route:
+         final args = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => SpeechRecordScreen(language: args,),
+        );
+         case OnboardingScreenUI.route:
+        return MaterialPageRoute(
+          builder: (_) => OnboardingScreenUI(),
         );
       default:
         return MaterialPageRoute(builder: (_) => Onboardingscreen());

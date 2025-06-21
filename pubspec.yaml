@@ -52,6 +52,9 @@ dependencies:
   flutter_sound: ^9.28.0
   path_provider: ^2.1.5
   ffmpeg_kit_flutter_new: ^1.6.1
+
+  mime: ^1.0.4
+  
 #
 #  ## Splash screen configuration should be at the root level (not under flutter:)
 #flutter_native_splash:

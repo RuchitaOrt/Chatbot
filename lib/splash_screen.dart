@@ -61,7 +61,8 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) => Speech_Page(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+         Speech_Page(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           final opacity = animation.drive(
             Tween<double>(begin: 0.0, end: 1.0).chain(

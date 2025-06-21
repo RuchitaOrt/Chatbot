@@ -95,7 +95,8 @@ class AudioRecorder {
     final directory = await getApplicationDocumentsDirectory();
     final tempPath = '${directory.path}/temp_recording.aac';
     _filePath = '${directory.path}/recording_${DateTime.now().millisecondsSinceEpoch}.mp3';
-
+      print("_filePath");
+     print(_filePath);
     // Record in AAC (widely supported)
     await _recorder!.startRecorder(
       toFile: tempPath,

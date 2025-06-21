@@ -7,7 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.chat_bot"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35         // explicitly set
+    buildToolsVersion = "35.0.0" // optional but recommended
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -26,7 +27,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
 //        minSdk = flutter.minSdkVersion
         minSdk = 24
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

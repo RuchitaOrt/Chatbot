@@ -27,7 +27,8 @@ class _RecordingPageState extends State<RecordingPage> {
 
   Future<void> _toggleRecording() async {
     if (_isRecording) {
-      _recordedFilePath = await _recorder.stopRecording();
+      _recordedFilePath = 
+      await _recorder.stopRecording();
       setState(() {
         _isRecording = false;
       });
