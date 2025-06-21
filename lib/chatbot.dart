@@ -79,6 +79,7 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   bool _speechEnabled = true;
   String _lastWords = '';
+    bool isLoading = false;
   // ----
   DateTime? _lastApiCallTime;
   Timer? _apiCooldownTimer;
@@ -269,42 +270,8 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // GestureDetector(
-                    //   onTap: () async {
-                    //     await flutterTts.stop();
-                    //     var status = await Permission.microphone.request();
-                    //     if (status != PermissionStatus.granted) {
-                    //       Fluttertoast.showToast(
-                    //         msg: "Microphone permission not granted",
-                    //         toastLength: Toast.LENGTH_SHORT,
-                    //       );
-                    //       return;
-                    //     } else {
-                    //       // speechProvider.speechToText.isListening
-                    //       speechProvider.speechToText?.isListening ?? false
-                    //           ? _stopListening()
-                    //           : _startListening();
-                    //       return;
-                    //     }
-                    //   },
-                    //   child: AnimatedBuilder(
-                    //     animation: _micGlowAnimation,
-                    //     builder: (context, child) {
-                    //       return Transform.scale(
-                    //         scale: speechProvider.speechToText?.isListening ?? false
-                    //             ? _micGlowAnimation.value
-                    //             : 1.0,
-                    //         child: child,
-                    //       );
-                    //     },
-                    //     child: Icon(
-                    //       speechProvider.speechToText?.isListening ?? false? Icons.mic: Icons.mic_off,
-                    //       size: 30,
-                    //       color:speechProvider.speechToText?.isListening ?? false ? Colors.red : Colors.white,
-                    //       // color: _isListening ? Colors.red : Color(0xff2b3e2b),
-                    //     ),
-                    //   ),
-                    // ),
+                    
+                     if (!isLoading)
                      GestureDetector(
               onLongPressStart: (_) => _startListening(),
               onLongPressEnd: (_) => _stopListening(),
@@ -317,7 +284,21 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
                 ),
               ),
             ),
+            if (isLoading)
+    Container(
+      child: Center(
+        child: SizedBox(
+          width: 30, // Adjust size as needed
+          height: 30,
+          child: CircularProgressIndicator(
+            color: Color(0xff2B3E2B),
+            strokeWidth: 5,
+          ),
+        ),
+      ),
+    ),
                     const SizedBox(width: 8),
+                     if (!isLoading)
                     IconButton(
                       icon: const Icon(
                         Icons.send,
@@ -621,7 +602,9 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
 
 Future<void> uploadAudioFile1(File? file,String text) async {
   try {
-    
+     setState(() {
+      isLoading = true;
+    });
         
     var uri = Uri.parse("http://chatbot.khushiyaann.com/api/apiapp/speech_to_text_translate");
 
@@ -709,6 +692,10 @@ Future<void> uploadAudioFile1(File? file,String text) async {
     }
   } catch (e) {
     print("❌ Exception: $e");
+  }finally {
+    setState(() {
+      isLoading = false;
+    });
   }
 }
 

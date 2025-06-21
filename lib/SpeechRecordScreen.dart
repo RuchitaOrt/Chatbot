@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:chat_bot/ChatSessionListPage.dart';
 import 'package:chat_bot/OnboardingScreenUI.dart';
+import 'package:chat_bot/chatbot.dart';
+import 'package:chat_bot/main.dart';
 import 'package:flutter/material.dart';
+import 'package:mime/mime.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_sound/flutter_sound.dart';
@@ -13,6 +17,15 @@ import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:chat_bot/APIService.dart'; // Replace with your actual API upload logic
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart'; // For basename()
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
+import 'package:path/path.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart'; // Make sure you added mime dependency in pubspec.yaml
+import 'package:path/path.dart'; // For basename()
 
 class SpeechRecordScreen extends StatefulWidget {
   final String language;
@@ -286,6 +299,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
             ),
 
             SizedBox(height: 20),
+            if (!isLoading)
             GestureDetector(
               onLongPressStart: (_) => _startListening(),
               onLongPressEnd: (_) => _stopListening(),
@@ -298,6 +312,22 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
                 ),
               ),
             ),
+             if (isLoading)
+    Positioned.fill(
+  child: Container(
+    child: Center(
+      child: SizedBox(
+        width: 80, // Adjust size as needed
+        height: 80,
+        child: CircularProgressIndicator(
+          color: Color(0xff2B3E2B),
+          strokeWidth: 10,
+        ),
+      ),
+    ),
+  ),
+),
+
             SizedBox(height: 20),
             Text(
               _isRecording ? "Release to stop" : "Hold the microphone to speak",
@@ -319,9 +349,74 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
       ),
     );
   }
+  bool isLoading = false;
 
+Future<void> uploadAudioFile(File file, String language) async {
+  try {
+    setState(() {
+      isLoading = true;
+    });
+
+    var uri = Uri.parse("http://chatbot.khushiyaann.com/api/apiapp/speech_to_text_translate");
+    var request = http.MultipartRequest('POST', uri);
+
+    final mimeType = lookupMimeType(file.path);
+    final fileName = basename(file.path);
+
+    request.fields['text_prompt'] = "";
+    request.fields['language_name_text'] = language;
+    request.files.add(await http.MultipartFile.fromPath(
+      'audio',
+      file.path,
+      contentType: mimeType != null
+          ? MediaType.parse(mimeType)
+          : MediaType('application', 'octet-stream'),
+      filename: fileName,
+    ));
+
+    request.headers.addAll({
+      "Accept": "*/*",
+    });
+
+    var response = await request.send();
+
+    if (response.statusCode == 200) {
+      final respStr = await response.stream.bytesToString();
+      final Map<String, dynamic> jsonResponse = json.decode(respStr);
+
+      final String question = jsonResponse['question'];
+      final String content = jsonResponse['content'];
+      final String languageName = jsonResponse['check_lanuage_response']
+              ?['data']?[0]?['single_language']?[0]?['language'] ??
+          '';
+
+      Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => Chatbot(
+            selectedIndex: 2,
+            speechdata: question,
+            replydata: content,
+            languageName: language,
+          ),
+        ),
+        (Route route) => false,
+      );
+
+      print('✅ Success: $respStr');
+    } else {
+      final errorResp = await response.stream.bytesToString();
+      print('❌ Server error ${response.statusCode}: $errorResp');
+    }
+  } catch (e) {
+    print("❌ Exception: $e");
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
+  }
+}
   void _getOutOfApp() {
-    Navigator.of(context).pushAndRemoveUntil(
+    Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: 500),
         pageBuilder: (context, animation, secondaryAnimation) =>
