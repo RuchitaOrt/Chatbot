@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:chat_bot/ChatSessionListPage.dart';
+import 'package:chat_bot/GlobalList.dart';
 import 'package:chat_bot/OnboardingScreenUI.dart';
 import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/main.dart';
@@ -56,7 +57,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
   final List<Color> gradientStart = [Color(0xff2b3e2b), Colors.teal];
   final List<Color> gradientEnd = [Colors.deepPurple, Colors.pink];
   bool _isSpeechInitialized = false;
-  bool _isRecorderInitialized=false;
+  bool _isRecorderInitialized = false;
 
   @override
   void initState() {
@@ -77,26 +78,27 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
       sin(angle + (isStart ? 0 : pi / 2)),
     );
   }
-Future<void> _initPermissions() async {
-  await Permission.microphone.request();
 
-  if (!_isSpeechInitialized) {
-    _isSpeechInitialized = await _speechToText.initialize(
-      onStatus: (status) => print('🔁 Status: $status'),
-      onError: (error) => print('❌ Error: $error'),
-    );
+  Future<void> _initPermissions() async {
+    await Permission.microphone.request();
 
     if (!_isSpeechInitialized) {
-      print("⚠️ Speech recognition not available");
-      return;
+      _isSpeechInitialized = await _speechToText.initialize(
+        onStatus: (status) => print('🔁 Status: $status'),
+        onError: (error) => print('❌ Error: $error'),
+      );
+
+      if (!_isSpeechInitialized) {
+        print("⚠️ Speech recognition not available");
+        return;
+      }
+    }
+
+    if (!_isRecorderInitialized) {
+      await _recorder.openRecorder();
+      _isRecorderInitialized = true;
     }
   }
-
-  if (!_isRecorderInitialized) {
-    await _recorder.openRecorder();
-    _isRecorderInitialized = true;
-  }
-}
 
   // Future<void> _initPermissions() async {
   //   await Permission.microphone.request();
@@ -123,9 +125,9 @@ Future<void> _initPermissions() async {
   Future<void> _startListening() async {
     if (!_isRecording) {
       if (!_isRecorderInitialized) {
-      await _recorder.openRecorder();
-      _isRecorderInitialized = true;
-    }
+        await _recorder.openRecorder();
+        _isRecorderInitialized = true;
+      }
       if (Platform.isAndroid) {
         final dir = await getApplicationDocumentsDirectory();
         _audioFilePath =
@@ -175,9 +177,11 @@ Future<void> _initPermissions() async {
       print("📝 Final recognized text: $_recognizedText");
       if (_audioFilePath != null && await File(_audioFilePath!).exists()) {
         print("✅ File exists at: $_audioFilePath");
- final mp3Path =
-        Platform.isAndroid?
-        await _convertToMp3(_audioFilePath!):await convertIOSToMp3(_audioFilePath!);
+        final mp3Path = 
+        Platform.isAndroid
+            ?
+             await _convertToMp3(_audioFilePath!):
+            await convertIOSToMp3(_audioFilePath!);
         // final mp3Path = await _convertToMp3(_audioFilePath!);
 //        final file = File(mp3Path!);
 
@@ -195,8 +199,9 @@ Future<void> _initPermissions() async {
         print("📄 Transcript: ${widget.language}");
 
         if (mp3Path != null) {
-          widget.language==null?uploadQuestionAudioFile(File(mp3Path),"", ""):
-          uploadQuestionAudioFile(File(mp3Path), widget.language!, "");
+          widget.language == null
+              ? uploadQuestionAudioFile(File(mp3Path), "", "")
+              : uploadQuestionAudioFile(File(mp3Path), widget.language!, "");
           //  uploadAudioFile(
           //    File(mp3Path), widget.language!,""); // Your API upload logic
         } else {
@@ -228,8 +233,8 @@ Future<void> _initPermissions() async {
   @override
   void dispose() {
     if (_isRecorderInitialized) {
-    _recorder.closeRecorder();
-  }
+      _recorder.closeRecorder();
+    }
     // _recorder.closeRecorder();
     super.dispose();
   }
@@ -237,319 +242,517 @@ Future<void> _initPermissions() async {
   void dismissKeyboard() {
     _focusNode.unfocus(); // Dismisses keyboard
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-            onWillPop: () async{
- SystemNavigator
-            .pop();
-       return false;
-      },
-      child: Scaffold(
-        backgroundColor: Color(0xffF9F7F0),
-        appBar: AppBar(
-          backgroundColor: Color(0xffF9F7F0),
-          // backgroundColor: Color(0xff2b3e2b),
-          automaticallyImplyLeading: false, // Hides the back arrow
-          title: Row(
-            children: [
-              Image.asset(
-                "assets/images/sitalogo.png",
-                height: 45,
-                width: 45,
-              ),
-              const Spacer(),
-              // const Icon(Icons.menu, color: Colors.white),
-              PopupMenuButton<String>(
-                icon: SvgPicture.asset("assets/images/menu.svg",
-                    width: 30, height: 30, color: Color(0xff2b3e2b)),
-                color: Colors.white,
-                padding: EdgeInsets.zero,
-                itemBuilder: (context) => [
-                  PopupMenuItem<String>(
-                    value: 'about',
-                    height: 30, // Smaller height
-                    child: Text(
-                      'About Us',
-                      style: TextStyle(fontSize: 14), // Smaller font
-                    ),
-                  ),
-                ],
-                onSelected: (value) {
-                  if (value == 'about') {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('About Us'),
-                        content: const Text('This is the best AI Chatbot app!'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              'Close',
-                              style: TextStyle(
-                                color: Color(0xff2b3e2b),
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    );
-                  }
-                },
-              )
-            ],
-          ),
-         
-        ),
-        body: SingleChildScrollView(
-          reverse: true,
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: SizeConfig.blockSizeVertical * 14,
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      child: Lottie.asset('assets/images/anim_bot.json',
-                          height: 250, animate: _speechToText.isNotListening),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: SizeConfig.blockSizeVertical * 1, //100
-                ),
-                Container(
-                  child: Text(
-                    _isRecording ? 'Listening....' : 'How can I help you?',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black),
-                  ),
-                ),
-      
-                SizedBox(
-                  height: SizeConfig.blockSizeVertical * 1,
-                ),
-                if (!isLoading)
-                  GestureDetector(
-                    onLongPressStart: (_) => _startListening(),
-                    onLongPressEnd: (_) => _stopListening(),
-                    child: Container(
-                      child: Lottie.asset(
-                        'assets/images/speech_anim.json',
-                        height: 95,
-                        width: 95,
-                        animate: _isRecording,
-                      ),
-                    ),
-                  ),
-                if (isLoading)
-                  Container(
-                    child: Center(
-                      child: SizedBox(
-                        width: 80, // Adjust size as needed
-                        height: 80,
-                        child: CircularProgressIndicator(
-                          color: Color(0xff2B3E2B),
-                          strokeWidth: 10,
-                        ),
-                      ),
-                    ),
-                  ),
-      
-                SizedBox(
-                  height: SizeConfig.blockSizeVertical * 1,
-                ),
-                Text(
-                  _isRecording
-                      ? "Release to stop"
-                      : "Hold the microphone to speak",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                ),
-                textfunction()
-                // Text('Recognized Text:',
-                //     style: TextStyle(fontWeight: FontWeight.bold)),
-                // SizedBox(height: 10),
-                // Text(_recognizedText),
-                // if (_audioFilePath != null) ...[
-                //   SizedBox(height: 20),
-                //   Text('MP4 saved at:'),
-                //   Text(_audioFilePath!),
-                // ]
-              ],
+Widget build(BuildContext context) {
+  return WillPopScope(
+    onWillPop: () async {
+      SystemNavigator.pop();
+      return false;
+    },
+    child: Scaffold(
+      backgroundColor: const Color(0xffF9F7F0),
+      appBar: AppBar(
+        backgroundColor: const Color(0xffF9F7F0),
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            Image.asset(
+              "assets/images/sitalogo.png",
+              height: SizeConfig.blockSizeVertical * 5,
+              width: SizeConfig.blockSizeVertical * 5,
             ),
+            const Spacer(),
+            PopupMenuButton<String>(
+              icon: SvgPicture.asset(
+                "assets/images/menu.svg",
+                width: SizeConfig.blockSizeHorizontal * 6,
+                height: SizeConfig.blockSizeHorizontal * 6,
+                color: const Color(0xff2b3e2b),
+              ),
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  value: 'about',
+                  height: SizeConfig.blockSizeVertical * 4,
+                  child: Text(
+                    'About Us',
+                    style: TextStyle(fontSize: SizeConfig.blockSizeHorizontal * 3.2),
+                  ),
+                ),
+              ],
+              onSelected: (value) {
+                if (value == 'about') {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('About Us'),
+                      content: const Text('This is the best AI Chatbot app!'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            'Close',
+                            style: TextStyle(color: Color(0xff2b3e2b)),
+                          ),
+                        )
+                      ],
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+      body: SingleChildScrollView(
+        reverse: true,
+        child: Padding(
+          padding: EdgeInsets.all(SizeConfig.blockSizeHorizontal * 3),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: SizeConfig.blockSizeVertical * 8),
+              Lottie.asset(
+                'assets/images/anim_bot.json',
+                height: SizeConfig.blockSizeVertical * 30,
+                animate: _speechToText.isNotListening,
+              ),
+              SizedBox(height: SizeConfig.blockSizeVertical * 10),
+              Text(
+                _isRecording ? 'Listening....' : 'How can I help you?',
+                style: TextStyle(
+                  fontSize: SizeConfig.blockSizeHorizontal * 4,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: SizeConfig.blockSizeVertical * 2),
+              if (!isLoading)
+                GestureDetector(
+                  onLongPressStart: (_) => _startListening(),
+                  onLongPressEnd: (_) => _stopListening(),
+                  child: Lottie.asset(
+                    'assets/images/speech_anim.json',
+                    height: SizeConfig.blockSizeVertical * 12,
+                    width: SizeConfig.blockSizeVertical * 12,
+                    animate: _isRecording,
+                  ),
+                ),
+              if (isLoading)
+                Center(
+                  child: SizedBox(
+                    width: SizeConfig.blockSizeHorizontal * 20,
+                    height: SizeConfig.blockSizeHorizontal * 20,
+                    child: const CircularProgressIndicator(
+                      color: Color(0xff2B3E2B),
+                      strokeWidth: 8,
+                    ),
+                  ),
+                ),
+              SizedBox(height: SizeConfig.blockSizeVertical * 2),
+              Text(
+                _isRecording ? "Release to stop" : "Hold the microphone to speak",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: SizeConfig.blockSizeHorizontal * 4,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+               
+              textfunction()
+            ],
           ),
         ),
       ),
-    );
-  }
-
-  textfunction() {
-    return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            height: SizeConfig.blockSizeVertical * 2.5,
-          ),
-          Text(
-            "or",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontSize: 18,
-                color: Color(0xff2B3E2B),
-                fontWeight: FontWeight.bold),
-          ),
-          SizedBox(
-            height: SizeConfig.blockSizeVertical * 1,
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            color: Color(0xffF9F7F0),
-            //  Color(0xff2b3e2b),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                      border: Border.all(
-                        color: Color(0xff436043), // ✅ Your desired border color
-                        width: 1.5, // Optional: adjust thickness
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _controllerText,
-                      maxLines: 1,
-                      focusNode: _focusNode,
-                      style: TextStyle(fontSize: 14),
-                      decoration: const InputDecoration.collapsed(
-                          hintText: "Write anything here..."),
-                    ),
+    ),
+  );
+}
+//  Text('Recognized Text:',
+//                     style: TextStyle(fontWeight: FontWeight.bold)),
+//                 SizedBox(height: 10),
+//                 Text(_recognizedText),
+//                 if (_audioFilePath != null) ...[
+//                   SizedBox(height: 20),
+//                   Text('MP4 saved at:'),
+//                   Text(_audioFilePath!),],
+Widget textfunction() {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      SizedBox(height: SizeConfig.blockSizeVertical * 2.5),
+      Text(
+        "or",
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: SizeConfig.blockSizeHorizontal * 4,
+          color: const Color(0xff2B3E2B),
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      SizedBox(height: SizeConfig.blockSizeVertical * 1),
+      Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: SizeConfig.blockSizeHorizontal * 2,
+          vertical: SizeConfig.blockSizeVertical * 0.5,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: SizeConfig.blockSizeVertical * 1.5,
+                  horizontal: SizeConfig.blockSizeHorizontal * 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: const Color(0xff436043),
+                    width: 1.5,
                   ),
                 ),
-                const SizedBox(width: 8),
-                if (isLoading)
-                  Container(
-                      // child: Center(
-                      //   child: SizedBox(
-                      //     width: 30, // Adjust size as needed
-                      //     height: 30,
-                      //     child: CircularProgressIndicator(
-                      //       color: Color(0xff2B3E2B),
-                      //       strokeWidth: 5,
-                      //     ),
-                      //   ),
-                      // ),
-                      ),
-                const SizedBox(width: 8),
-                if (!isLoading)
-                  GestureDetector(
-                    onTap: () {
-                      final text = _controllerText.text.trim();
-                      if (text.isNotEmpty) {
-                        // detectLanguage(text);
-                        dismissKeyboard();
-                        widget.language==null?uploadQuestionAudioFile(null,"", text):
-                        uploadQuestionAudioFile(null, widget.language!, text);
-                        //uploadAudioFile(null,widget.language!,text,);
-                        _controllerText.clear();
-                        // _hasSentSpeechResult = true;
-                      }
-                    },
-                    child: SvgPicture.asset("assets/images/send.svg",
-                        width: 30, height: 30, color: Color(0xff2b3e2b)),
-                  )
-              ],
+                child: TextField(
+                  controller: _controllerText,
+                  focusNode: _focusNode,
+                  style: TextStyle(fontSize: SizeConfig.blockSizeHorizontal * 3.5),
+                  decoration: const InputDecoration.collapsed(
+                    hintText: "Write anything here...",
+                  ),
+                ),
+              ),
             ),
-          ),
-        ]);
-  }
+            SizedBox(width: SizeConfig.blockSizeHorizontal * 2),
+            if (!isLoading)
+              GestureDetector(
+                onTap: () {
+                  final text = _controllerText.text.trim();
+                  if (text.isNotEmpty) {
+                    dismissKeyboard();
+                    widget.language == null
+                        ? uploadQuestionAudioFile(null, "", text)
+                        : uploadQuestionAudioFile(null, widget.language!, text);
+                    _controllerText.clear();
+                  }
+                },
+                child: SvgPicture.asset(
+                  "assets/images/send.svg",
+                  width: SizeConfig.blockSizeHorizontal * 6,
+                  height: SizeConfig.blockSizeHorizontal * 6,
+                  color: const Color(0xff2b3e2b),
+                ),
+              ),
+          ],
+        ),
+      ),
+       
+    ],
+  );
+}
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   return WillPopScope(
+  //     onWillPop: () async {
+  //       SystemNavigator.pop();
+  //       return false;
+  //     },
+  //     child: Scaffold(
+  //       backgroundColor: Color(0xffF9F7F0),
+  //       appBar: AppBar(
+  //         backgroundColor: Color(0xffF9F7F0),
+  //         // backgroundColor: Color(0xff2b3e2b),
+  //         automaticallyImplyLeading: false, // Hides the back arrow
+  //         title: Row(
+  //           children: [
+  //             Image.asset(
+  //               "assets/images/sitalogo.png",
+  //               height: 45,
+  //               width: 45,
+  //             ),
+  //             const Spacer(),
+  //             // const Icon(Icons.menu, color: Colors.white),
+  //             PopupMenuButton<String>(
+  //               icon: SvgPicture.asset("assets/images/menu.svg",
+  //                   width: 30, height: 30, color: Color(0xff2b3e2b)),
+  //               color: Colors.white,
+  //               padding: EdgeInsets.zero,
+  //               itemBuilder: (context) => [
+  //                 PopupMenuItem<String>(
+  //                   value: 'about',
+  //                   height: 30, // Smaller height
+  //                   child: Text(
+  //                     'About Us',
+  //                     style: TextStyle(fontSize: 14), // Smaller font
+  //                   ),
+  //                 ),
+  //               ],
+  //               onSelected: (value) {
+  //                 if (value == 'about') {
+  //                   showDialog(
+  //                     context: context,
+  //                     builder: (context) => AlertDialog(
+  //                       title: const Text('About Us'),
+  //                       content: const Text('This is the best AI Chatbot app!'),
+  //                       actions: [
+  //                         TextButton(
+  //                           onPressed: () => Navigator.pop(context),
+  //                           child: const Text(
+  //                             'Close',
+  //                             style: TextStyle(
+  //                               color: Color(0xff2b3e2b),
+  //                             ),
+  //                           ),
+  //                         )
+  //                       ],
+  //                     ),
+  //                   );
+  //                 }
+  //               },
+  //             )
+  //           ],
+  //         ),
+  //       ),
+  //       body: SingleChildScrollView(
+  //         reverse: true,
+  //         child: Padding(
+  //           padding: const EdgeInsets.all(10),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.center,
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: [
+  //               SizedBox(
+  //                 height: SizeConfig.blockSizeVertical * 14,
+  //               ),
+  //               Column(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 crossAxisAlignment: CrossAxisAlignment.center,
+  //                 mainAxisSize: MainAxisSize.min,
+  //                 children: [
+  //                   Container(
+  //                     width: double.infinity,
+  //                     child: Lottie.asset('assets/images/anim_bot.json',
+  //                         height: 250, animate: _speechToText.isNotListening),
+  //                   ),
+  //                 ],
+  //               ),
+  //               SizedBox(
+  //                 height: SizeConfig.blockSizeVertical * 1, //100
+  //               ),
+  //               Container(
+  //                 child: Text(
+  //                   _isRecording ? 'Listening....' : 'How can I help you?',
+  //                   style: TextStyle(
+  //                       fontSize: 18,
+  //                       fontWeight: FontWeight.w400,
+  //                       color: Colors.black),
+  //                 ),
+  //               ),
+
+  //               SizedBox(
+  //                 height: SizeConfig.blockSizeVertical * 1,
+  //               ),
+  //               if (!isLoading)
+  //                 GestureDetector(
+  //                   onLongPressStart: (_) => _startListening(),
+  //                   onLongPressEnd: (_) => _stopListening(),
+  //                   child: Container(
+  //                     child: Lottie.asset(
+  //                       'assets/images/speech_anim.json',
+  //                       height: 95,
+  //                       width: 95,
+  //                       animate: _isRecording,
+  //                     ),
+  //                   ),
+  //                 ),
+  //               if (isLoading)
+  //                 Container(
+  //                   child: Center(
+  //                     child: SizedBox(
+  //                       width: 80, // Adjust size as needed
+  //                       height: 80,
+  //                       child: CircularProgressIndicator(
+  //                         color: Color(0xff2B3E2B),
+  //                         strokeWidth: 10,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+
+  //               SizedBox(
+  //                 height: SizeConfig.blockSizeVertical * 1,
+  //               ),
+  //               Text(
+  //                 _isRecording
+  //                     ? "Release to stop"
+  //                     : "Hold the microphone to speak",
+  //                 textAlign: TextAlign.center,
+  //                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+  //               ),
+  //               textfunction()
+              
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  // textfunction() {
+  //   return Column(
+  //       mainAxisAlignment: MainAxisAlignment.center,
+  //       crossAxisAlignment: CrossAxisAlignment.center,
+  //       children: [
+  //         SizedBox(
+  //           height: SizeConfig.blockSizeVertical * 2.5,
+  //         ),
+  //         Text(
+  //           "or",
+  //           textAlign: TextAlign.center,
+  //           style: TextStyle(
+  //               fontSize: 18,
+  //               color: Color(0xff2B3E2B),
+  //               fontWeight: FontWeight.bold),
+  //         ),
+  //         SizedBox(
+  //           height: SizeConfig.blockSizeVertical * 1,
+  //         ),
+  //         Container(
+  //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  //           color: Color(0xffF9F7F0),
+  //           //  Color(0xff2b3e2b),
+  //           child: Row(
+  //             children: [
+  //               Expanded(
+  //                 child: Container(
+  //                   padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+  //                   decoration: BoxDecoration(
+  //                     color: Colors.white,
+  //                     borderRadius: BorderRadius.circular(25),
+  //                     border: Border.all(
+  //                       color: Color(0xff436043), // ✅ Your desired border color
+  //                       width: 1.5, // Optional: adjust thickness
+  //                     ),
+  //                   ),
+  //                   child: TextField(
+  //                     controller: _controllerText,
+  //                     maxLines: 1,
+  //                     focusNode: _focusNode,
+  //                     style: TextStyle(fontSize: 14),
+  //                     decoration: const InputDecoration.collapsed(
+  //                         hintText: "Write anything here..."),
+  //                   ),
+  //                 ),
+  //               ),
+  //               const SizedBox(width: 8),
+  //               if (isLoading)
+  //                 Container(
+  //                     // child: Center(
+  //                     //   child: SizedBox(
+  //                     //     width: 30, // Adjust size as needed
+  //                     //     height: 30,
+  //                     //     child: CircularProgressIndicator(
+  //                     //       color: Color(0xff2B3E2B),
+  //                     //       strokeWidth: 5,
+  //                     //     ),
+  //                     //   ),
+  //                     // ),
+  //                     ),
+  //               const SizedBox(width: 8),
+  //               if (!isLoading)
+  //                 GestureDetector(
+  //                   onTap: () {
+  //                     final text = _controllerText.text.trim();
+  //                     if (text.isNotEmpty) {
+  //                       // detectLanguage(text);
+  //                       dismissKeyboard();
+  //                       widget.language == null
+  //                           ? uploadQuestionAudioFile(null, "", text)
+  //                           : uploadQuestionAudioFile(
+  //                               null, widget.language!, text);
+  //                       //uploadAudioFile(null,widget.language!,text,);
+  //                       _controllerText.clear();
+  //                       // _hasSentSpeechResult = true;
+  //                     }
+  //                   },
+  //                   child: SvgPicture.asset("assets/images/send.svg",
+  //                       width: 30, height: 30, color: Color(0xff2b3e2b)),
+  //                 )
+  //             ],
+  //           ),
+  //         ),
+  //       ]);
+  // }
 
   bool isLoading = false;
 
-  Future<void> uploadAudioFile(File? file, String language, String text) async {
-    try {
-      setState(() {
-        isLoading = true;
-      });
+  // Future<void> uploadAudioFile(File? file, String language, String text) async {
+  //   try {
+  //     setState(() {
+  //       isLoading = true;
+  //     });
 
-      var uri = Uri.parse(
-          "http://chatbot.khushiyaann.com/api/apiapp/speech_to_text_translate");
-      var request = http.MultipartRequest('POST', uri);
+  //     var uri = Uri.parse(
+  //         "http://chatbot.khushiyaann.com/api/apiapp/speech_to_text_translate");
+  //     var request = http.MultipartRequest('POST', uri);
 
-      print("API HIt");
-      request.fields['text_prompt'] = text;
-      request.fields['language_name_text'] = language;
-      if (file != null) {
-        final mimeType = lookupMimeType(file!.path!);
-        final fileName = basename(file.path);
-        request.files.add(await http.MultipartFile.fromPath(
-          'audio',
-          file.path,
-          contentType: mimeType != null
-              ? MediaType.parse(mimeType)
-              : MediaType('application', 'octet-stream'),
-          filename: fileName,
-        ));
-      }
-      request.headers.addAll({
-        "Accept": "*/*",
-      });
+  //     print("API HIt");
+  //     request.fields['text_prompt'] = text;
+  //     request.fields['language_name_text'] = language;
+  //     if (file != null) {
+  //       final mimeType = lookupMimeType(file!.path!);
+  //       final fileName = basename(file.path);
+  //       request.files.add(await http.MultipartFile.fromPath(
+  //         'audio',
+  //         file.path,
+  //         contentType: mimeType != null
+  //             ? MediaType.parse(mimeType)
+  //             : MediaType('application', 'octet-stream'),
+  //         filename: fileName,
+  //       ));
+  //     }
+  //     request.headers.addAll({
+  //       "Accept": "*/*",
+  //     });
 
-      var response = await request.send();
+  //     var response = await request.send();
 
-      if (response.statusCode == 200) {
-        final respStr = await response.stream.bytesToString();
-        final Map<String, dynamic> jsonResponse = json.decode(respStr);
+  //     if (response.statusCode == 200) {
+  //       final respStr = await response.stream.bytesToString();
+  //       final Map<String, dynamic> jsonResponse = json.decode(respStr);
 
-        final String question = jsonResponse['question'];
-        final String content = jsonResponse['content'];
-        final String languageName = jsonResponse['check_lanuage_response']
-                ?['data']?[0]?['single_language']?[0]?['language'] ??
-            '';
+  //       final String question = jsonResponse['question'];
+  //       final String content = jsonResponse['content'];
+  //       final String languageName = jsonResponse['check_lanuage_response']
+  //               ?['data']?[0]?['single_language']?[0]?['language'] ??
+  //           '';
 
-        Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => Chatbot(
-              selectedIndex: 2,
-              speechdata: question,
-              replydata: content,
-              languageName: language,
-              file: file!,
-            ),
-          ),
-          (Route route) => false,
-        );
+  //       Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
+  //         MaterialPageRoute(
+  //           builder: (context) => Chatbot(
+  //             selectedIndex: 2,
+  //             speechdata: question,
+  //             replydata: content,
+  //             languageName: language,
+  //             file: file!,
+  //           ),
+  //         ),
+  //         (Route route) => false,
+  //       );
 
-        print('✅ Success: $respStr');
-      } else {
-        final errorResp = await response.stream.bytesToString();
-        print('❌ Server error ${response.statusCode}: $errorResp');
-      }
-    } catch (e) {
-      print("❌ Exception: $e");
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
+  //       print('✅ Success: $respStr');
+  //     } else {
+  //       final errorResp = await response.stream.bytesToString();
+  //       print('❌ Server error ${response.statusCode}: $errorResp');
+  //     }
+  //   } catch (e) {
+  //     print("❌ Exception: $e");
+  //   } finally {
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //   }
+  // }
 
   Future<void> uploadQuestionAudioFile(
       File? file, String language, String text) async {
@@ -568,7 +771,7 @@ Future<void> _initPermissions() async {
       // print(language);
       request.fields['text_prompt'] = text;
       request.fields['language_name_text'] = "";
-       print(text);
+      print(text);
       if (file != null) {
         final mimeType = lookupMimeType(file.path);
         final fileName = basename(file.path);
@@ -585,53 +788,56 @@ Future<void> _initPermissions() async {
       request.headers.addAll({
         "Accept": "*/*",
       });
- print(text);
+      print(text);
       var response = await request.send();
 
       if (response.statusCode == 200) {
         final respStr = await response.stream.bytesToString();
         final Map<String, dynamic> jsonResponse = json.decode(respStr);
-
+        final String languageDetected = jsonResponse['detected_lang'];
+        GlobalLists.languageDetected = languageDetected;
+print("DETECTED LANGUAGE");
+        print( GlobalLists.languageDetected);
         final String question = jsonResponse['question'];
         // final String content = jsonResponse['content'];
-        final String languageName = jsonResponse['language_name']
-                ;
-if(file!=null)
-{
-Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => Chatbot(
-              selectedIndex: 2,
-              speechdata: question,
-              replydata: "",
-              languageName: languageName,
-              file: file,
+        final String languageName = jsonResponse['language_name'];
+
+        if (file != null) {
+          Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => Chatbot(
+                selectedIndex: 2,
+                speechdata: question,
+                replydata: "",
+                languageName: languageName,
+                file: file,
+              ),
             ),
-          ),
-          (Route route) => false,
-        );
-}else{
-  Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => Chatbot(
-              selectedIndex: 2,
-              speechdata: question,
-              replydata: "",
-              languageName: languageName,
-              
+            (Route route) => false,
+          );
+        } else {
+          Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => Chatbot(
+                selectedIndex: 2,
+                speechdata: question,
+                replydata: "",
+                languageName: languageName,
+              ),
             ),
-          ),
-          (Route route) => false,
-        );
-}
-        
+            (Route route) => false,
+          );
+        }
 
         print('✅ Success: $respStr');
       } else {
         final errorResp = await response.stream.bytesToString();
+        
+      
         print('❌ Server error ${response.statusCode}: $errorResp');
       }
     } catch (e) {
+       
       print("❌ Exception: $e");
     } finally {
       setState(() {
@@ -639,23 +845,27 @@ Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
       });
     }
   }
-Future<String?> convertIOSToMp3(String aacPath) async {
-  final mp3Path = aacPath.replaceAll('.aac', '.mp3');
 
-  final session = await FFmpegKit.execute(
-    '-i "$aacPath" -codec:a libmp3lame -qscale:a 2 "$mp3Path"'
-  );
+  Future<String?> convertIOSToMp3(String aacPath) async {
+    final mp3Path = aacPath.replaceAll('.aac', '.mp3');
 
-  final returnCode = await session.getReturnCode();
+    final session = await FFmpegKit.execute(
+        '-i "$aacPath" -codec:a libmp3lame -qscale:a 2 "$mp3Path"');
 
-  if (ReturnCode.isSuccess(returnCode)) {
-    print('✅ Conversion successful: $mp3Path');
-    return mp3Path;
-  } else {
-    print('❌ Conversion failed with code: $returnCode');
-    return null;
+    final returnCode = await session.getReturnCode();
+
+    if (ReturnCode.isSuccess(returnCode)) {
+      
+      print('✅ Conversion successful: $mp3Path');
+
+      return mp3Path;
+    } else {
+       
+      print('❌ Conversion failed with code: $returnCode');
+      return null;
+    }
   }
-}
+
   void _getOutOfApp() {
     Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
       PageRouteBuilder(

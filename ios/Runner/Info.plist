@@ -14,6 +14,8 @@
 		<string>6.0</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>We need access to your microphone to convert speech to text.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+        <string>We need speech recognition access to process your speech.</string>
 		<key>CFBundleName</key>
 		<string>chat_bot</string>
 		<key>CFBundlePackageType</key>

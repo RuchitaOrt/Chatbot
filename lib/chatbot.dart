@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:chat_bot/APIService.dart';
+import 'package:chat_bot/GlobalList.dart';
 import 'package:chat_bot/OnboardingScreenUI.dart';
 import 'package:chat_bot/SpeechRecordScreen.dart';
 import 'package:chat_bot/Speech_Page.dart';
@@ -83,7 +84,8 @@ class _ChatbotState extends State<Chatbot>
   String _detectedLang = "en";
   late AnimationController _animationController;
   late Animation<double> _micGlowAnimation;
-  List<Map<String, String>> messages = [];
+  // List<Map<String, String>> messages = [];
+  List<ChatMessage> messages = [];
 
   // ----
   final stt.SpeechToText _speechToText = stt.SpeechToText();
@@ -120,11 +122,24 @@ class _ChatbotState extends State<Chatbot>
         //  detectLanguage(widget.speechdata!);
         final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
         setState(() {
-          messages.add({
-            "message": widget.speechdata!,
-            "isUser": "true",
-            "time": '$time ${widget.languageName}'
-          });
+          // messages.add({
+          //   "message": widget.speechdata!,
+          //   "isUser": "true",
+          //   "time": '$time ${widget.languageName}',
+          //   "showButtons":GlobalLists.isButtonVisible.toString()
+          // });
+          messages.add(ChatMessage(
+            message: widget.speechdata!,
+            isUser: true,
+            time: '$time ${widget.languageName}',
+            showButtons: GlobalLists.isButtonVisible.toString(),
+            onYesPressed: () {
+              print("✅ Yes clicked!");
+            },
+            onNoPressed: () {
+              print("❌ No clicked!");
+            },
+          ));
         });
         _scrollToBottom();
         // Speak in detected language
@@ -157,7 +172,7 @@ class _ChatbotState extends State<Chatbot>
       setState(() {
         isLoading = true;
       });
-
+print("RUCHITA ${GlobalLists.languageDetected}");
       var uri = Uri.parse(
           "http://chatbot.khushiyaann.com/api/apiapp/question_speech_to_text_translate");
       var request = http.MultipartRequest('POST', uri);
@@ -167,8 +182,10 @@ class _ChatbotState extends State<Chatbot>
       print(text);
       // print(language);
       request.fields['text_prompt'] = text;
-      request.fields['language_name_text'] = "";
+      request.fields['language_name_text'] = GlobalLists.languageDetected;
       print(text);
+      print("QUESTION REQUEST ${GlobalLists.languageDetected}");
+      print(request.fields);
       if (file != null) {
         final mimeType = lookupMimeType(file.path);
         final fileName = basename(file.path);
@@ -194,26 +211,129 @@ class _ChatbotState extends State<Chatbot>
 
         final String question = jsonResponse['question'];
         final String languageName = jsonResponse['language_name'];
+
+        GlobalLists.isButtonVisible = jsonResponse['buttons'].toString();
+        final String changeQuestion = jsonResponse['button_question'];
+        if (GlobalLists.isButtonVisible == "true") {
+          
+        } else {
+          final String languageDetected = jsonResponse['detected_lang'];
+          GlobalLists.languageDetected = languageDetected;
+        }
+print("RUCHITA 1 ${GlobalLists.languageDetected}");
         // final String content = jsonResponse['content'];
         // final String languageName = jsonResponse['check_lanuage_response']
         //         ?['data']?[0]?['single_language']?[0]?['language'] ??
         //     '';
         setState(() {
           final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
-          messages.add({
-            "message": question,
-            "isUser": "true",
-            "time": '$time  ${languageName}'
-          });
+          // messages.add({
+          //   "message": question,
+          //   "isUser": "true",
+          //   "time": '$time  ${languageName}',
+          //   "showButtons":GlobalLists.isButtonVisible.toString()
+          // });
+          messages.add(ChatMessage(
+            message: question,
+            isUser: true,
+            time: '$time ${widget.languageName}',
+            showButtons: GlobalLists.isButtonVisible.toString(),
+            onYesPressed: () {
+              print("✅ Yes clicked!");
+            },
+            onNoPressed: () {
+              print("❌ No clicked!");
+            },
+          ));
         });
         _scrollToBottom();
         //    setState(() {
         //   isLoading = false;
         // });
-        if (file != null) {
-          uploadAudioFile1(file, question);
+
+        if (GlobalLists.isButtonVisible == "true") {
+          setState(() {
+            isLoading = false;
+            
+          });
+          final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+          setState(() {
+          
+            messages.add(ChatMessage(
+              message: changeQuestion,
+              isUser: false,
+              time: '$time ${languageName}',
+              showButtons: GlobalLists.isButtonVisible.toString(),
+              onYesPressed: () async {
+                print("✅ Yes clicked!");
+                setState(() {
+                  GlobalLists.isButtonVisible = "false";
+                   final String languageDetected = jsonResponse['detected_lang'];
+          GlobalLists.languageDetected = languageDetected;
+                });
+print("RUCHITA 2${GlobalLists.languageDetected}");
+                // update the latest bot message to hide buttons
+                final lastIndex = messages.lastIndexWhere((m) => !m.isUser);
+                if (lastIndex != -1) {
+                  setState(() {
+                    messages[lastIndex] = ChatMessage(
+                      message: messages[lastIndex].message,
+                      isUser: false,
+                      time: messages[lastIndex].time,
+                      showButtons: "false", // ✅ Hide buttons
+                      // keep callbacks null or same
+                    );
+                  });
+                }
+
+                if (file != null) {
+                  await uploadAudioFile1(file, question);
+                } else {
+                  await uploadAudioFile1(null, question);
+                }
+              },
+
+              onNoPressed: () {
+                print("❌ No clicked!");
+                setState(() {
+                  GlobalLists.isButtonVisible = "false";
+                  print("RUCHITA 4${GlobalLists.languageDetected}");
+        //           if (GlobalLists.isButtonVisible == "true") {
+        // } else {
+          // final String languageDetected = jsonResponse['detected_lang'];
+          // GlobalLists.languageDetected = languageDetected;
+        final lastIndex = messages.lastIndexWhere((m) => !m.isUser);
+                if (lastIndex != -1) {
+                  setState(() {
+                    messages[lastIndex] = ChatMessage(
+                      message: messages[lastIndex].message,
+                      isUser: false,
+                      time: messages[lastIndex].time,
+                      showButtons: "false", // ✅ Hide buttons
+                      // keep callbacks null or same
+                    );
+                  });
+                }
+                });
+                 print("RUCHITA 5${GlobalLists.languageDetected}");
+                if (file != null) {
+
+                  uploadAudioFile1(file, question);
+                } else {
+                  uploadAudioFile1(null, question);
+                }
+              },
+            ));
+          });
+          speakmessage(changeQuestion, routeGlobalKey.currentContext!);
+          _scrollToBottom();
+          dismissKeyboard();
         } else {
-          uploadAudioFile1(null, question);
+          if (file != null) {
+            uploadAudioFile1(file, question);
+          } else {
+            uploadAudioFile1(null, question);
+          }
         }
 
         print('✅ Success: $respStr');
@@ -337,9 +457,15 @@ class _ChatbotState extends State<Chatbot>
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final msg = messages[index];
-                    final isUser = msg["isUser"] == "true";
-                    return chatBubble(msg["message"]!,
-                        isUser: isUser, time: msg["time"]!);
+                    final isUser = msg.isUser == true;
+                    return chatBubble(
+                      msg.message,
+                      isUser: isUser,
+                      time: msg.time,
+                      showButtons: msg.showButtons,
+                      onYesPressed: msg.onYesPressed,
+                      onNoPressed: msg.onNoPressed,
+                    );
                   },
                 ),
               ),
@@ -458,8 +584,14 @@ class _ChatbotState extends State<Chatbot>
     );
   }
 
-  Widget chatBubble(String message,
-      {required bool isUser, required String time}) {
+  Widget chatBubble(
+    String message, {
+    required bool isUser,
+    required String time,
+    String showButtons = "false",
+    VoidCallback? onYesPressed, // Optional callback for Yes
+    VoidCallback? onNoPressed, // Optional callback for No
+  }) {
     return Column(
       crossAxisAlignment:
           isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -474,11 +606,9 @@ class _ChatbotState extends State<Chatbot>
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isUser ? Color(0xffE3D9B5) : Colors.grey[300],
-                  //isUser ? Colors.teal[50] : Colors.grey[300],
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     isUser
@@ -486,40 +616,60 @@ class _ChatbotState extends State<Chatbot>
                             width: 20, height: 20, color: Color(0xff2b3e2b))
                         : SvgPicture.asset("assets/images/bot.svg",
                             width: 20, height: 20, color: Color(0xff2b3e2b)),
-                    Text(message)
+                    const SizedBox(height: 4),
+                    Text(message),
+                    if (showButtons == "true" && !isUser) ...[
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton(
+                            onPressed: onYesPressed ??
+                                () {
+                                  print("Default Yes pressed");
+                                },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xff2b3e2b),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4),
+                              textStyle: const TextStyle(fontSize: 12),
+                            ),
+                            child: const Text("Yes"),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: onNoPressed ??
+                                () {
+                                  print("Default No pressed");
+                                },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4),
+                              textStyle: const TextStyle(fontSize: 12),
+                            ),
+                            child: const Text("No"),
+                          ),
+                        ],
+                      )
+                    ]
                   ],
                 ),
               ),
             ),
-            SizedBox(
-              width: 10,
-            ),
+            const SizedBox(width: 10),
             if (!isUser)
               GestureDetector(
                 onTap: () async {
                   _stopListening();
-                  // _detectedLang =
-                  //     await languageIdentifier.identifyLanguage(message);
                   await flutterTts.stop();
                   speakmessage(message, routeGlobalKey.currentContext!);
                 },
                 child: SvgPicture.asset("assets/images/volume.svg",
                     width: 20, height: 20, color: Color(0xff2b3e2b)),
               )
-            // IconButton(
-            //   icon: const Icon(
-            //     Icons.volume_up,
-            //     size: 20,
-            //     color: Color(0xff2b3e2b),
-            //   ),
-            //   // onPressed: () => speak(message, _detectedLang),
-            //   onPressed: () async {
-            //     _stopListening();
-            //     _detectedLang = await languageIdentifier.identifyLanguage(message);
-            //     await flutterTts.stop();
-            //     speakmessage(message, routeGlobalKey.currentContext!);
-            //   },
-            // ),
           ],
         ),
         Padding(
@@ -531,80 +681,284 @@ class _ChatbotState extends State<Chatbot>
     );
   }
 
-  Future<void> detectLanguage(String inputText) async {
-    var connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      Fluttertoast.showToast(
-        msg: "No internet connection",
-        toastLength: Toast.LENGTH_SHORT,
-      );
-      return;
-    }
+// Widget chatBubble(
+//   String message, {
+//   required bool isUser,
+//   required String time,
+//   String showButtons = "false", // 👈 Add a flag if buttons should be shown
+// }) {
+//   return Column(
+//     crossAxisAlignment:
+//         isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+//     children: [
+//       Row(
+//         mainAxisAlignment:
+//             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+//         children: [
+//           Flexible(
+//             child: Container(
+//               margin: const EdgeInsets.symmetric(vertical: 6),
+//               padding: const EdgeInsets.all(12),
+//               decoration: BoxDecoration(
+//                 color: isUser ? Color(0xffE3D9B5) : Colors.grey[300],
+//                 borderRadius: BorderRadius.circular(12),
+//               ),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   isUser
+//                       ? SvgPicture.asset("assets/images/user.svg",
+//                           width: 20, height: 20, color: Color(0xff2b3e2b))
+//                       : SvgPicture.asset("assets/images/bot.svg",
+//                           width: 20, height: 20, color: Color(0xff2b3e2b)),
+//                   const SizedBox(height: 4),
+//                   Text(message),
+//                   if (showButtons=="true" && !isUser) ...[
+//                     const SizedBox(height: 10),
+//                     Row(
+//                       mainAxisAlignment: MainAxisAlignment.end,
+//                       children: [
+//                         ElevatedButton(
+//                           onPressed: () {
+//                             print("Yes pressed");
+//                             // Handle Yes logic
 
-    final url = Uri.parse(
-        'https://smarkerz-webscrap.onerooftechnologiesllp.com/detect-language');
-    final headers = {
-      'Content-Type': 'application/json',
-    };
+//                           },
+//                           style: ElevatedButton.styleFrom(
+//                             backgroundColor: Color(0xff2b3e2b),
+//                             foregroundColor: Colors.white,
+//                             padding: const EdgeInsets.symmetric(
+//                                 horizontal: 12, vertical: 4),
+//                             textStyle: const TextStyle(fontSize: 12),
+//                           ),
+//                           child: const Text("Yes"),
+//                         ),
+//                         const SizedBox(width: 8),
+//                         ElevatedButton(
+//                           onPressed: () {
+//                             print("No pressed");
+//                             // Handle No logic
+//                           },
+//                           style: ElevatedButton.styleFrom(
+//                             backgroundColor: Colors.grey,
+//                             foregroundColor: Colors.white,
+//                             padding: const EdgeInsets.symmetric(
+//                                 horizontal: 12, vertical: 4),
+//                             textStyle: const TextStyle(fontSize: 12),
+//                           ),
+//                           child: const Text("No"),
+//                         ),
+//                       ],
+//                     )
+//                   ]
+//                 ],
+//               ),
+//             ),
+//           ),
+//           const SizedBox(width: 10),
+//           if (!isUser)
+//             GestureDetector(
+//               onTap: () async {
+//                 _stopListening();
+//                 await flutterTts.stop();
+//                 speakmessage(message, routeGlobalKey.currentContext!);
+//               },
+//               child: SvgPicture.asset("assets/images/volume.svg",
+//                   width: 20, height: 20, color: Color(0xff2b3e2b)),
+//             )
+//         ],
+//       ),
+//       Padding(
+//         padding: const EdgeInsets.symmetric(horizontal: 8.0),
+//         child: Text(time,
+//             style: const TextStyle(fontSize: 10, color: Colors.grey)),
+//       ),
+//     ],
+//   );
+// }
 
-    final body = jsonEncode({
-      'text': inputText,
-      'languageCode': '',
-    });
+  // Widget chatBubble(String message,
+  //     {required bool isUser, required String time}) {
+  //   return Column(
+  //     crossAxisAlignment:
+  //         isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment:
+  //             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+  //         children: [
+  //           Flexible(
+  //             child: Container(
+  //               margin: const EdgeInsets.symmetric(vertical: 6),
+  //               padding: const EdgeInsets.all(12),
+  //               decoration: BoxDecoration(
+  //                 color: isUser ? Color(0xffE3D9B5) : Colors.grey[300],
+  //                 //isUser ? Colors.teal[50] : Colors.grey[300],
+  //                 borderRadius: BorderRadius.circular(12),
+  //               ),
+  //               child: Column(
+  //                 mainAxisAlignment: MainAxisAlignment.start,
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   isUser
+  //                       ? SvgPicture.asset("assets/images/user.svg",
+  //                           width: 20, height: 20, color: Color(0xff2b3e2b))
+  //                       : SvgPicture.asset("assets/images/bot.svg",
+  //                           width: 20, height: 20, color: Color(0xff2b3e2b)),
+  //                   Text(message)
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //           SizedBox(
+  //             width: 10,
+  //           ),
+  //           if (!isUser)
+  //             GestureDetector(
+  //               onTap: () async {
+  //                 _stopListening();
+  //                 // _detectedLang =
+  //                 //     await languageIdentifier.identifyLanguage(message);
+  //                 await flutterTts.stop();
+  //                 speakmessage(message, routeGlobalKey.currentContext!);
+  //               },
+  //               child: SvgPicture.asset("assets/images/volume.svg",
+  //                   width: 20, height: 20, color: Color(0xff2b3e2b)),
+  //             )
+  //           // IconButton(
+  //           //   icon: const Icon(
+  //           //     Icons.volume_up,
+  //           //     size: 20,
+  //           //     color: Color(0xff2b3e2b),
+  //           //   ),
+  //           //   // onPressed: () => speak(message, _detectedLang),
+  //           //   onPressed: () async {
+  //           //     _stopListening();
+  //           //     _detectedLang = await languageIdentifier.identifyLanguage(message);
+  //           //     await flutterTts.stop();
+  //           //     speakmessage(message, routeGlobalKey.currentContext!);
+  //           //   },
+  //           // ),
+  //         ],
+  //       ),
+  //       Padding(
+  //         padding: const EdgeInsets.symmetric(horizontal: 8.0),
+  //         child: Text(time,
+  //             style: const TextStyle(fontSize: 10, color: Colors.grey)),
+  //       ),
+  //     ],
+  //   );
+  // }
 
-    try {
-      final response = await http.post(
-        url,
-        headers: headers,
-        body: body,
-      );
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        print('Language Detection Response: $responseData');
-        final decoded = jsonDecode(response.body);
-        List<SingleLanguage> languages = parseSingleLanguageList(decoded);
-        final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
-        _detectedLang = languages.first.language;
-        setState(() {
-          //USER
-          messages.add({
-            "message": languages.first.nativelanguage,
-            "isUser": "true",
-            "time": '$time ${languages.first.languageName}'
-          });
-        });
-        dismissKeyboard();
-        _scrollToBottom();
-        await Future.delayed(const Duration(seconds: 3));
-        final botReply = languages.first.convertIntoOriginalLanguage;
-        setState(() {
-          messages.add({
-            "message": botReply,
-            "isUser": "false",
-            "time": '$time ${languages.first.languageName}'
-          });
-        });
-        _scrollToBottom();
-        // Speak in detected language
-        speakmessage(botReply, routeGlobalKey.currentContext!);
-        _scrollToBottom();
-        dismissKeyboard();
-      } else {
-        print('Failed with status code: ${response.statusCode}');
-        print('Response body: ${response.body}');
-        Fluttertoast.showToast(
-          msg: 'Response body: ${response.body}',
-          toastLength: Toast.LENGTH_SHORT,
-        );
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-      // Fluttertoast.showToast(
-      //   msg: 'Error occurred: $e',
-      //   toastLength: Toast.LENGTH_SHORT,
-      // );
-    }
-  }
+//   Future<void> detectLanguage(String inputText) async {
+//     var connectivityResult = await Connectivity().checkConnectivity();
+//     if (connectivityResult == ConnectivityResult.none) {
+//       Fluttertoast.showToast(
+//         msg: "No internet connection",
+//         toastLength: Toast.LENGTH_SHORT,
+//       );
+//       return;
+//     }
+
+//     final url = Uri.parse(
+//         'https://smarkerz-webscrap.onerooftechnologiesllp.com/detect-language');
+//     final headers = {
+//       'Content-Type': 'application/json',
+//     };
+
+//     final body = jsonEncode({
+//       'text': inputText,
+//       'languageCode': '',
+//     });
+
+//     try {
+//       final response = await http.post(
+//         url,
+//         headers: headers,
+//         body: body,
+//       );
+//       if (response.statusCode == 200) {
+//         final responseData = jsonDecode(response.body);
+//         print('Language Detection Response: $responseData');
+//         final decoded = jsonDecode(response.body);
+//         List<SingleLanguage> languages = parseSingleLanguageList(decoded);
+//         final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+//         _detectedLang = languages.first.language;
+//         setState(() {
+//           //USER
+//           // messages.add({
+//           //   "message": languages.first.nativelanguage,
+//           //   "isUser": "true",
+//           //   "time": '$time ${languages.first.languageName}',
+//           //   "showButtons":GlobalLists.isButtonVisible.toString()
+
+//           // });
+//            messages.add(ChatMessage(
+//   message: languages.first.nativelanguage,
+//   isUser: true,
+//   time: '$time ${languages.first.languageName}',
+//   showButtons: GlobalLists.isButtonVisible.toString(),
+//   onYesPressed: () {
+//     print("✅ Yes clicked!");
+//   },
+//   onNoPressed: () {
+//     print("❌ No clicked!");
+//   },
+// ));
+//         });
+//         dismissKeyboard();
+//         _scrollToBottom();
+//         await Future.delayed(const Duration(seconds: 3));
+//         final botReply = languages.first.convertIntoOriginalLanguage;
+//         setState(() {
+//   //         messages.add({
+//   //           "message": botReply,
+//   //           "isUser": "false",
+//   //           "time": '$time ${languages.first.languageName}',
+//   //           "showButtons":GlobalLists.isButtonVisible.toString(),
+//   //            "onYesPressed": () {
+//   //   // Custom Yes logic
+//   //   print("✅ Yes clicked!");
+//   // },
+//   // "onNoPressed": () {
+//   //   // Custom No logic
+//   //   print("❌ No clicked!");
+//   // },
+//   //         });
+//     messages.add(ChatMessage(
+//   message: botReply,
+//   isUser: false,
+//   time:  '$time ${languages.first.languageName}',
+//   showButtons: GlobalLists.isButtonVisible.toString(),
+//   onYesPressed: () {
+//     print("✅ Yes clicked!");
+//   },
+//   onNoPressed: () {
+//     print("❌ No clicked!");
+//   },
+// ));
+//         });
+//         _scrollToBottom();
+//         // Speak in detected language
+//         speakmessage(botReply, routeGlobalKey.currentContext!);
+//         _scrollToBottom();
+//         dismissKeyboard();
+//       } else {
+//         print('Failed with status code: ${response.statusCode}');
+//         print('Response body: ${response.body}');
+//         Fluttertoast.showToast(
+//           msg: 'Response body: ${response.body}',
+//           toastLength: Toast.LENGTH_SHORT,
+//         );
+//       }
+//     } catch (e) {
+//       print('Error occurred: $e');
+//       // Fluttertoast.showToast(
+//       //   msg: 'Error occurred: $e',
+//       //   toastLength: Toast.LENGTH_SHORT,
+//       // );
+//     }
+//   }
 
   List<SingleLanguage> parseSingleLanguageList(
       Map<String, dynamic> jsonResponse) {
@@ -638,6 +992,7 @@ class _ChatbotState extends State<Chatbot>
 
   Future<void> speakmessage(String message, BuildContext context) async {
     try {
+      // _detectedLang=GlobalLists.languageDetected;
       await flutterTts.setLanguage(_detectedLang);
       // Check if TTS is available before speaking
       var isAvailable = await flutterTts.isLanguageAvailable(_detectedLang);
@@ -780,10 +1135,11 @@ class _ChatbotState extends State<Chatbot>
 
       if (_audioFilePath != null && await File(_audioFilePath!).exists()) {
         print("✅ File exists at: $_audioFilePath");
-        
+
         final mp3Path =
-        Platform.isAndroid?
-        await _convertToMp3(_audioFilePath!):await convertIOSToMp3(_audioFilePath!);
+            // Platform.isAndroid?
+            await _convertToMp3(_audioFilePath!);
+        // :await convertIOSToMp3(_audioFilePath!);
 
         if (mp3Path != null) {
           // uploadAudioFile1(File(mp3Path),_recognizedText); // Your API upload logic
@@ -801,6 +1157,7 @@ class _ChatbotState extends State<Chatbot>
   Future<void> uploadAudioFile1(File? file, String text) async {
     print("API RUCHITA");
     print("API INIT");
+     print("RUCHITA 6 ${GlobalLists.languageDetected}");
     try {
       setState(() {
         isLoading = true;
@@ -817,10 +1174,13 @@ class _ChatbotState extends State<Chatbot>
       // Get mime type (optional, can be omitted if server doesn't require it)
 
       print("API HITTED");
+      print("API INIT ${text}");
+      print("API INIT Language ${GlobalLists.languageDetected}");
       // Attach file
       request.fields['text_prompt'] = text;
-      request.fields['language_name_text'] = widget.languageName!;
-
+      request.fields['language_name_text'] = GlobalLists.languageDetected;
+      print("RUCHITA Request");
+print(request.fields);
       if (file != null) {
         final mimeType = lookupMimeType(file.path); // e.g., "audio/mp3"
         final fileName = basename(file.path); // e.g., audio.mp3
@@ -850,25 +1210,24 @@ class _ChatbotState extends State<Chatbot>
         final String languageName = jsonResponse['check_lanuage_response']
                 ?['data']?[0]?['single_language']?[0]?['languageName'] ??
             '';
+
         print("🟢 Question: $question");
-        // setState(() {
-        //     final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
-        //         messages.add({
-        //           "message": question,
-        //           "isUser": "true",
-        //           "time": '$time '
-        //         });
-        //       });
-        //       _scrollToBottom();
-        // _scrollToBottom();
-        // Speak in detected language
+       
         final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
         setState(() {
-          messages.add({
-            "message": content,
-            "isUser": "false",
-            "time": '$time ${languageName}'
-          });
+         
+          messages.add(ChatMessage(
+            message: content,
+            isUser: false,
+            time: '$time ${languageName}',
+            showButtons: GlobalLists.isButtonVisible.toString(),
+            onYesPressed: () {
+              print("✅ Yes clicked!");
+            },
+            onNoPressed: () {
+              print("❌ No clicked!");
+            },
+          ));
         });
         speakmessage(content, routeGlobalKey.currentContext!);
         _scrollToBottom();
@@ -892,6 +1251,7 @@ class _ChatbotState extends State<Chatbot>
           isLoading = false;
         });
         final errorResp = await response.stream.bytesToString();
+       
         print('❌ Server error ${response.statusCode}: $errorResp');
       }
     } catch (e) {
@@ -899,29 +1259,32 @@ class _ChatbotState extends State<Chatbot>
         isLoading = false;
       });
       print("❌ Exception: $e");
+    
     } finally {
       setState(() {
         isLoading = false;
       });
     }
   }
-Future<String?> convertIOSToMp3(String aacPath) async {
-  final mp3Path = aacPath.replaceAll('.aac', '.mp3');
 
-  final session = await FFmpegKit.execute(
-    '-i "$aacPath" -codec:a libmp3lame -qscale:a 2 "$mp3Path"'
-  );
+  Future<String?> convertIOSToMp3(String aacPath) async {
+    final mp3Path = aacPath.replaceAll('.aac', '.mp3');
 
-  final returnCode = await session.getReturnCode();
+    final session = await FFmpegKit.execute(
+        '-i "$aacPath" -codec:a libmp3lame -qscale:a 2 "$mp3Path"');
 
-  if (ReturnCode.isSuccess(returnCode)) {
-    print('✅ Conversion successful: $mp3Path');
-    return mp3Path;
-  } else {
-    print('❌ Conversion failed with code: $returnCode');
-    return null;
+    final returnCode = await session.getReturnCode();
+
+    if (ReturnCode.isSuccess(returnCode)) {
+      
+      print('✅ Conversion successful: $mp3Path');
+      return mp3Path;
+    } else {
+       
+      print('❌ Conversion failed with code: $returnCode');
+      return null;
+    }
   }
-}
 
   Future<String?> _convertToMp3(String inputPath) async {
     final mp3Path = inputPath.replaceAll(".mp4", ".mp3");
@@ -984,7 +1347,7 @@ Future<String?> convertIOSToMp3(String aacPath) async {
     if (!_speechToText.isListening) {
       _stopListening();
       _startApiCooldown();
-      detectLanguage(_lastWords);
+      // detectLanguage(_lastWords);
     }
   }
 
@@ -1024,4 +1387,22 @@ Future<String?> convertIOSToMp3(String aacPath) async {
     //
     // }
   }
+}
+
+class ChatMessage {
+  final String message;
+  final bool isUser;
+  final String time;
+  final String showButtons;
+  final VoidCallback? onYesPressed;
+  final VoidCallback? onNoPressed;
+
+  ChatMessage({
+    required this.message,
+    required this.isUser,
+    required this.time,
+    this.showButtons = "false",
+    this.onYesPressed,
+    this.onNoPressed,
+  });
 }
