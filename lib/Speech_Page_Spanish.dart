@@ -256,15 +256,15 @@ class _Speech_Page_Spanish_State extends State<Speech_Page_Spanish> with SingleT
       if (!_speechToText!.isListening) {
         _stopListening();
         if (_lastWords.isNotEmpty) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => Chatbot_Spanish(
-                selectedIndex: 2,
-                speechdata: _lastWords,
-              ),
-            ),
-          (Route route) => false,
-          );
+          // Navigator.of(context).pushAndRemoveUntil(
+          //   MaterialPageRoute(
+          //     builder: (context) => Chatbot_Spanish(
+          //       selectedIndex: 2,
+          //       speechdata: _lastWords,
+          //     ),
+          //   ),
+          // (Route route) => false,
+          // );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

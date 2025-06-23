@@ -27,7 +27,7 @@ import 'package:provider/provider.dart';
 
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
+// import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
 import 'package:translator/translator.dart';
 
 import 'SingleLanguage.dart';
@@ -74,7 +74,7 @@ class _ChatbotState extends State<Chatbot>
   final FocusNode _focusNode = FocusNode(); // Declare a FocusNode
   // final stt.SpeechToText _speech = stt.SpeechToText();
 
-  final languageIdentifier = LanguageIdentifier(confidenceThreshold: 0.5);
+  // final languageIdentifier = LanguageIdentifier(confidenceThreshold: 0.5);
   final translator = GoogleTranslator();
 
   // bool _isListening = false;
@@ -115,8 +115,8 @@ class _ChatbotState extends State<Chatbot>
       if (widget.selectedIndex == 0) {
         // normal
       } else if (widget.selectedIndex == 2) {
-        _detectedLang =
-            await languageIdentifier.identifyLanguage(widget.speechdata!);
+        // _detectedLang =
+        //     await languageIdentifier.identifyLanguage(widget.speechdata!);
         //  detectLanguage(widget.speechdata!);
         final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
         setState(() {
@@ -243,7 +243,7 @@ class _ChatbotState extends State<Chatbot>
     _focusNode.dispose(); // Clean up to avoid memory leaks
     _speechToText.stop();
     _animationController.dispose();
-    languageIdentifier.close();
+    // languageIdentifier.close();
     _scrollController.dispose();
     _apiCooldownTimer?.cancel();
     super.dispose();
@@ -498,8 +498,8 @@ class _ChatbotState extends State<Chatbot>
               GestureDetector(
                 onTap: () async {
                   _stopListening();
-                  _detectedLang =
-                      await languageIdentifier.identifyLanguage(message);
+                  // _detectedLang =
+                  //     await languageIdentifier.identifyLanguage(message);
                   await flutterTts.stop();
                   speakmessage(message, routeGlobalKey.currentContext!);
                 },
@@ -780,8 +780,10 @@ class _ChatbotState extends State<Chatbot>
 
       if (_audioFilePath != null && await File(_audioFilePath!).exists()) {
         print("✅ File exists at: $_audioFilePath");
-
-        final mp3Path = await _convertToMp3(_audioFilePath!);
+        
+        final mp3Path =
+        Platform.isAndroid?
+        await _convertToMp3(_audioFilePath!):await convertIOSToMp3(_audioFilePath!);
 
         if (mp3Path != null) {
           // uploadAudioFile1(File(mp3Path),_recognizedText); // Your API upload logic
@@ -903,6 +905,23 @@ class _ChatbotState extends State<Chatbot>
       });
     }
   }
+Future<String?> convertIOSToMp3(String aacPath) async {
+  final mp3Path = aacPath.replaceAll('.aac', '.mp3');
+
+  final session = await FFmpegKit.execute(
+    '-i "$aacPath" -codec:a libmp3lame -qscale:a 2 "$mp3Path"'
+  );
+
+  final returnCode = await session.getReturnCode();
+
+  if (ReturnCode.isSuccess(returnCode)) {
+    print('✅ Conversion successful: $mp3Path');
+    return mp3Path;
+  } else {
+    print('❌ Conversion failed with code: $returnCode');
+    return null;
+  }
+}
 
   Future<String?> _convertToMp3(String inputPath) async {
     final mp3Path = inputPath.replaceAll(".mp4", ".mp3");

@@ -37,7 +37,7 @@ dependencies:
   google_fonts:
   speech_to_text: ^7.0.0
   flutter_tts: ^4.2.3
-  google_mlkit_language_id: ^0.13.0
+  # google_mlkit_language_id: ^0.13.0
   translator: ^1.0.3+1
   google_translation:
   http: ^1.4.0

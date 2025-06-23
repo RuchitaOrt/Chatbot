@@ -32,10 +32,10 @@ class Routers {
             selectedIndex: 1,
           ),
         );
-      case AllLanguageChatbot.route:
-        return MaterialPageRoute(
-          builder: (_) => AllLanguageChatbot(),
-        );
+      // case AllLanguageChatbot.route:
+      //   return MaterialPageRoute(
+      //     builder: (_) => AllLanguageChatbot(),
+      //   );
       case SplashScreen.route:
         return MaterialPageRoute(
           builder: (_) => SplashScreen(),
@@ -48,14 +48,14 @@ class Routers {
         return MaterialPageRoute(
           builder: (_) => Speech_Page_Spanish(),
         );
-      case Chatbot_Spanish.route:
-        return MaterialPageRoute(
-          builder: (_) => Chatbot_Spanish(selectedIndex: 1,),
-        );
-        case Translator_Page.route:
-        return MaterialPageRoute(
-          builder: (_) => Translator_Page(selectedIndex: 1,),
-        );
+      // case Chatbot_Spanish.route:
+      //   return MaterialPageRoute(
+      //     builder: (_) => Chatbot_Spanish(selectedIndex: 1,),
+      //   );
+        // case Translator_Page.route:
+        // return MaterialPageRoute(
+        //   builder: (_) => Translator_Page(selectedIndex: 1,),
+        // );
         case LanguageDashboard.route:
         return MaterialPageRoute(
           builder: (_) => LanguageDashboard(),

@@ -151,9 +151,9 @@ class _OnboardingscreenState extends State<Onboardingscreen> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.of(
-                      routeGlobalKey.currentContext!,
-                    ).pushNamed(Translator_Page.route);
+                    // Navigator.of(
+                    //   routeGlobalKey.currentContext!,
+                    // ).pushNamed(Translator_Page.route);
                   },
                   child: Container(
                     decoration: BoxDecoration(

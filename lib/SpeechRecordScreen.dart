@@ -175,8 +175,10 @@ Future<void> _initPermissions() async {
       print("📝 Final recognized text: $_recognizedText");
       if (_audioFilePath != null && await File(_audioFilePath!).exists()) {
         print("✅ File exists at: $_audioFilePath");
-
-        final mp3Path = await _convertToMp3(_audioFilePath!);
+ final mp3Path =
+        Platform.isAndroid?
+        await _convertToMp3(_audioFilePath!):await convertIOSToMp3(_audioFilePath!);
+        // final mp3Path = await _convertToMp3(_audioFilePath!);
 //        final file = File(mp3Path!);
 
 // final request = http.MultipartRequest(
@@ -637,7 +639,23 @@ Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
       });
     }
   }
+Future<String?> convertIOSToMp3(String aacPath) async {
+  final mp3Path = aacPath.replaceAll('.aac', '.mp3');
 
+  final session = await FFmpegKit.execute(
+    '-i "$aacPath" -codec:a libmp3lame -qscale:a 2 "$mp3Path"'
+  );
+
+  final returnCode = await session.getReturnCode();
+
+  if (ReturnCode.isSuccess(returnCode)) {
+    print('✅ Conversion successful: $mp3Path');
+    return mp3Path;
+  } else {
+    print('❌ Conversion failed with code: $returnCode');
+    return null;
+  }
+}
   void _getOutOfApp() {
     Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
       PageRouteBuilder(
