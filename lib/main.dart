@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:chat_bot/LanguageDashboard.dart';
 import 'package:chat_bot/OnboardingScreenUI.dart';
+import 'package:chat_bot/SpeechRecordScreen.dart';
 import 'package:chat_bot/Speech_Page.dart';
 import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/onboardingScreen.dart';
@@ -64,10 +65,11 @@ class _MyAppState extends State<MyApp> {
         // initialRoute:Speech_Page.route,
         // initialRoute: SplashScreen.route,
         initialRoute: 
-        // Chatbot.route,
-         OnboardingScreenUI.route,
+        //Chatbot.route,
+         // OnboardingScreenUI.route,
         // LanguageDashboard.route,
         //  Onboardingscreen.route,
+       SpeechRecordScreen.route,
         onGenerateRoute: Routers.generateRoute,
       );
     

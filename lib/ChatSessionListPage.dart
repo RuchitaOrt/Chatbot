@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:chat_bot/LanguageDashboard.dart';
 import 'package:chat_bot/SpeechRecordScreen.dart';
 import 'package:chat_bot/Speech_Page.dart';
@@ -133,6 +135,7 @@ class _ChatSessionListPageState extends State<ChatSessionListPage> with SingleTi
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
                     builder: (context) => Chatbot(
+                      file: File(""),
                       selectedIndex: 2,
                       speechdata: "Hello",
                     ),

@@ -54,6 +54,7 @@ dependencies:
   ffmpeg_kit_flutter_new: ^1.6.1
 
   mime: ^1.0.4
+  flutter_svg: ^2.0.10+1
   
 #
 #  ## Splash screen configuration should be at the root level (not under flutter:)

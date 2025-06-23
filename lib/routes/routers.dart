@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:chat_bot/AllLanguageChatbot.dart';
 import 'package:chat_bot/ChatSessionListPage.dart';
 import 'package:chat_bot/LanguageDashboard.dart';
@@ -26,6 +28,7 @@ class Routers {
       case Chatbot.route:
         return MaterialPageRoute(
           builder: (_) => Chatbot(
+            file: File(""),
             selectedIndex: 1,
           ),
         );
@@ -62,7 +65,7 @@ class Routers {
           builder: (_) => ChatSessionListPage(),
         );
         case SpeechRecordScreen.route:
-         final args = settings.arguments as String;
+         final args = settings.arguments as String? ?? '';
         return MaterialPageRoute(
           builder: (_) => SpeechRecordScreen(language: args,),
         );

@@ -382,6 +382,7 @@ Future<void> _startListening() async {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (context) => Chatbot(
+            file: File(""),
             selectedIndex: 2,
             speechdata: _lastWords,
           ),
@@ -482,6 +483,7 @@ void _onSpeechResult(SpeechRecognitionResult result) {
               builder: (context) => Chatbot(
                 selectedIndex: 2,
                 speechdata: _lastWords,
+                file: File(""),
               ),
             ),
           (Route route) => false,
