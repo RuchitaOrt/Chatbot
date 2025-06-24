@@ -121,6 +121,25 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
       print(_recognizedText);
     });
   }
+Future<String?> convertWavToMp3(String wavPath) async {
+  final mp3Path = wavPath.replaceAll('.wav', '.mp3');
+
+  final session = await FFmpegKit.execute(
+    "-i '$wavPath' -codec:a libmp3lame -qscale:a 2 '$mp3Path'"
+  );
+
+  final returnCode = await session.getReturnCode();
+
+  if (ReturnCode.isSuccess(returnCode)) {
+    print('✅ MP3 Conversion successful: $mp3Path');
+    return mp3Path;
+  } else {
+    print('❌ MP3 Conversion failed: $returnCode');
+    final log = await session.getAllLogsAsString();
+    print('📜 FFmpeg Logs:\n$log');
+    return null;
+  }
+}
 
   Future<void> _startListening() async {
     if (!_isRecording) {
@@ -140,14 +159,23 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
         );
       } else {
         final dir = await getApplicationDocumentsDirectory();
-        _audioFilePath =
-            '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.aac';
+_audioFilePath =
+    '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-        await _recorder.startRecorder(
-          toFile: _audioFilePath,
-          codec: Codec.aacADTS, // ✅ Supported on iOS
-          sampleRate: 44100,
-        );
+await _recorder.startRecorder(
+  toFile: _audioFilePath,
+  codec: Codec.pcm16WAV, // ✅ WAV format
+  sampleRate: 44100,
+);
+        // final dir = await getApplicationDocumentsDirectory();
+        // _audioFilePath =
+        //     '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.aac';
+
+        // await _recorder.startRecorder(
+        //   toFile: _audioFilePath,
+        //   codec: Codec.aacADTS, // ✅ Supported on iOS
+        //   sampleRate: 44100,
+        // );
       }
       // await _speechToText.listen(
       //   onResult: (result) {
@@ -181,7 +209,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
         Platform.isAndroid
             ?
              await _convertToMp3(_audioFilePath!):
-            await convertIOSToMp3(_audioFilePath!);
+            await convertWavToMp3(_audioFilePath!);
         // final mp3Path = await _convertToMp3(_audioFilePath!);
 //        final file = File(mp3Path!);
 
@@ -366,14 +394,7 @@ Widget build(BuildContext context) {
     ),
   );
 }
-//  Text('Recognized Text:',
-//                     style: TextStyle(fontWeight: FontWeight.bold)),
-//                 SizedBox(height: 10),
-//                 Text(_recognizedText),
-//                 if (_audioFilePath != null) ...[
-//                   SizedBox(height: 20),
-//                   Text('MP4 saved at:'),
-//                   Text(_audioFilePath!),],
+
 Widget textfunction() {
   return Column(
     mainAxisAlignment: MainAxisAlignment.center,

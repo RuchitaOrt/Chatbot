@@ -370,8 +370,14 @@ print("RUCHITA 2${GlobalLists.languageDetected}");
   }
 
   Future<void> speak(String text, String langCode) async {
+    // iOS, macOS only
+await flutterTts.setVoice({"identifier": "com.apple.voice.compact.en-AU.Karen"});
+
+// iOS only
+await flutterTts.setSharedInstance(true);
     await flutterTts.setLanguage(langCode);
     await flutterTts.speak(text);
+    
   }
 
   final ScrollController _scrollController = ScrollController();
@@ -977,6 +983,11 @@ print("RUCHITA 2${GlobalLists.languageDetected}");
     await flutterTts.setLanguage(_detectedLang);
     await flutterTts.setPitch(1.0);
     await flutterTts.setSpeechRate(0.5);
+    // iOS, macOS only
+await flutterTts.setVoice({"identifier": "com.apple.voice.compact.en-AU.Karen"});
+
+// iOS only
+await flutterTts.setSharedInstance(true);
     _speechEnabled = await _speechToText.initialize(onStatus: (status) {
       print('status _initSpeech $status');
       if (status == 'listening' && !_speechToText.isListening) {
@@ -1053,6 +1064,7 @@ print("RUCHITA 2${GlobalLists.languageDetected}");
         actions: [
           TextButton(
             onPressed: () {
+              print(messages);
               Navigator.of(context).pop(); // Close dialog
             },
             child: Text(
@@ -1089,14 +1101,23 @@ print("RUCHITA 2${GlobalLists.languageDetected}");
         );
       } else {
         final dir = await getApplicationDocumentsDirectory();
-        _audioFilePath =
-            '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.aac';
+_audioFilePath =
+    '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-        await _recorder.startRecorder(
-          toFile: _audioFilePath,
-          codec: Codec.aacADTS, // ✅ Supported on iOS
-          sampleRate: 44100,
-        );
+await _recorder.startRecorder(
+  toFile: _audioFilePath,
+  codec: Codec.pcm16WAV, // ✅ WAV format
+  sampleRate: 44100,
+);
+        // final dir = await getApplicationDocumentsDirectory();
+        // _audioFilePath =
+        //     '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.aac';
+
+        // await _recorder.startRecorder(
+        //   toFile: _audioFilePath,
+        //   codec: Codec.aacADTS, // ✅ Supported on iOS
+        //   sampleRate: 44100,
+        // );
       }
       // final dir = await getApplicationDocumentsDirectory();
       // _audioFilePath =
@@ -1137,9 +1158,9 @@ print("RUCHITA 2${GlobalLists.languageDetected}");
         print("✅ File exists at: $_audioFilePath");
 
         final mp3Path =
-            // Platform.isAndroid?
-            await _convertToMp3(_audioFilePath!);
-        // :await convertIOSToMp3(_audioFilePath!);
+           Platform.isAndroid?
+            await _convertToMp3(_audioFilePath!)
+         :await convertWavToMp3(_audioFilePath!);
 
         if (mp3Path != null) {
           // uploadAudioFile1(File(mp3Path),_recognizedText); // Your API upload logic
@@ -1153,7 +1174,25 @@ print("RUCHITA 2${GlobalLists.languageDetected}");
       }
     }
   }
+Future<String?> convertWavToMp3(String wavPath) async {
+  final mp3Path = wavPath.replaceAll('.wav', '.mp3');
 
+  final session = await FFmpegKit.execute(
+    "-i '$wavPath' -codec:a libmp3lame -qscale:a 2 '$mp3Path'"
+  );
+
+  final returnCode = await session.getReturnCode();
+
+  if (ReturnCode.isSuccess(returnCode)) {
+    print('✅ MP3 Conversion successful: $mp3Path');
+    return mp3Path;
+  } else {
+    print('❌ MP3 Conversion failed: $returnCode');
+    final log = await session.getAllLogsAsString();
+    print('📜 FFmpeg Logs:\n$log');
+    return null;
+  }
+}
   Future<void> uploadAudioFile1(File? file, String text) async {
     print("API RUCHITA");
     print("API INIT");
