@@ -63,7 +63,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
   void initState() {
     super.initState();
     print("widget.language");
-    print(widget.language);
+    // print(widget.language);
     _initPermissions();
     _controller =
         AnimationController(vsync: this, duration: const Duration(seconds: 6))
@@ -140,8 +140,58 @@ Future<String?> convertWavToMp3(String wavPath) async {
     return null;
   }
 }
+void _showSettingsDialog() {
+  showDialog(
+    context: routeGlobalKey.currentContext!,
+    builder: (context) => AlertDialog(
+      title: const Text("Permission Required"),
+      content: const Text(
+        "Microphone access has been permanently denied. Please enable it manually in the app settings.",
+        style: TextStyle(color: Color(0xff2b3e2b),)
+      ),
+      actions: [
+        TextButton(
+          onPressed: () 
+          {
+             Navigator.pop(context);
+            openAppSettings();
+          },
+          child: const Text("Open Settings",style: TextStyle(color: Color(0xff2b3e2b),),),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Cancel",style: TextStyle(color: Color(0xff2b3e2b),)),
+        ),
+      ],
+    ),
+  );
+}
+
 
   Future<void> _startListening() async {
+      final status = await Permission.microphone.status;
+  if (!status.isGranted) {
+    final result = await Permission.microphone.request();
+    if (!result.isGranted) {
+      // Permission denied — show message or dialog
+      _showSettingsDialog();
+      return;
+    }
+  }
+if (!_isSpeechInitialized) {
+    _isSpeechInitialized = await _speechToText.initialize(
+      onStatus: (status) => print('🔁 Status: $status'),
+      onError: (error) => print('❌ Error: $error'),
+    );
+
+    if (!_isSpeechInitialized) {
+      print("⚠️ Failed to initialize speech recognition");
+      return;
+    }
+  }
+
+
+
     if (!_isRecording) {
       if (!_isRecorderInitialized) {
         await _recorder.openRecorder();
@@ -240,7 +290,10 @@ await _recorder.startRecorder(
       }
     }
   }
-
+@override
+void didChangeAppLifecycleState(AppLifecycleState state) {
+  print("App state: $state");
+}
   Future<String?> _convertToMp3(String inputPath) async {
     final mp3Path = inputPath.replaceAll(".mp4", ".mp3");
 
@@ -271,10 +324,13 @@ await _recorder.startRecorder(
     _focusNode.unfocus(); // Dismisses keyboard
   }
 Widget build(BuildContext context) {
+   SizeConfig().init(context);
   return WillPopScope(
     onWillPop: () async {
-      SystemNavigator.pop();
-      return false;
+  Future.delayed(const Duration(milliseconds: 100), () {
+    SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+  });
+  return false;
     },
     child: Scaffold(
       backgroundColor: const Color(0xffF9F7F0),
@@ -783,10 +839,12 @@ Widget textfunction() {
       });
 
       var uri = Uri.parse(
-          "http://chatbot.khushiyaann.com/api/apiapp/question_speech_to_text_translate");
+          // "http://chatbot.khushiyaann.com/api/apiapp/question_speech_to_text_translate"
+          "http://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate"
+          );
       var request = http.MultipartRequest('POST', uri);
       print(
-          "http://chatbot.khushiyaann.com/api/apiapp/question_speech_to_text_translate");
+          "http://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate");
 
       print(text);
       // print(language);
