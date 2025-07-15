@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:audio_session/audio_session.dart';
 import 'package:chat_bot/APIService.dart';
 import 'package:chat_bot/GlobalList.dart';
 import 'package:chat_bot/OnboardingScreenUI.dart';
@@ -102,7 +103,7 @@ class _ChatbotState extends State<Chatbot>
   Timer? _apiCooldownTimer;
 
   CancelToken? _cancelToken;
-  AudioPlayer? _audioPlayer; // Declare at class level
+  // AudioPlayer? _audioPlayer; // Declare at class level
 
 final Map<String, String> writeHintText = {
   'English': 'Write anything here...',
@@ -279,7 +280,8 @@ String getExitSessionText(String langCode) {
       _cancelToken = CancelToken();
 
       final String uri =
-          "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate";
+   //   "https://newchatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate";
+         "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate";
 
       FormData formData = FormData.fromMap({
         'text_prompt': text,
@@ -938,6 +940,11 @@ String getExitSessionText(String langCode) {
               )
           ],
         ),
+        //  Padding(
+        //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        //   child: Text(path,
+        //       style: const TextStyle(fontSize: 10, color: Colors.grey)),
+        // ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Text(time,
@@ -1062,47 +1069,77 @@ String getExitSessionText(String langCode) {
 //     );
 //   }
 // }
-Future<void> speakmessage(String mp3Url, BuildContext context) async {
-  try {
-    _audioPlayer?.dispose(); // Dispose previous if any
-    _audioPlayer = AudioPlayer();
-// "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-// ScaffoldMessenger.of(context).showSnackBar(
+// Future<void> speakmessage(String mp3Url, BuildContext context) async {
+//   try {
+//     _audioPlayer?.dispose(); // Dispose previous if any
+//     _audioPlayer = AudioPlayer();
+// // "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+// // ScaffoldMessenger.of(context).showSnackBar(
+// //        SnackBar(
+// //         content: Text(mp3Url),
+// //         duration: Duration(seconds: 2),
+// //       ),
+// //     );
+//     await _audioPlayer!.setUrl(
+//       // "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+//       // "https://samplelib.com/lib/preview/wav/sample-3s.wav"
+//        mp3Url
+//       );
+      
+      
+//     await _audioPlayer!.play();
+// // ScaffoldMessenger.of(context).showSnackBar(
+// //        SnackBar(
+// //         content: Text(mp3Url),
+// //         duration: Duration(seconds: 2),
+// //       ),
+// //     );
+//     // Wait for completion (optional)
+//     _audioPlayer!.playerStateStream.firstWhere(
+//       (state) => state.processingState == ProcessingState.completed,
+//     );
+//   } catch (e) {
+//     print(mp3Url);
+//     print("🔴 Error playing audio: $e");
+//     ScaffoldMessenger.of(context).showSnackBar(
 //        SnackBar(
-//         content: Text(mp3Url),
+//         content: Text('Error playing audio: $e'),
 //         duration: Duration(seconds: 2),
 //       ),
 //     );
-    await _audioPlayer!.setUrl(
-      // "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-      // "https://samplelib.com/lib/preview/wav/sample-3s.wav"
-       mp3Url
-      );
-      
-      
-    await _audioPlayer!.play();
-// ScaffoldMessenger.of(context).showSnackBar(
-//        SnackBar(
-//         content: Text(mp3Url),
-//         duration: Duration(seconds: 2),
-//       ),
-//     );
-    // Wait for completion (optional)
-    _audioPlayer!.playerStateStream.firstWhere(
-      (state) => state.processingState == ProcessingState.completed,
-    );
-  } catch (e) {
-    print(mp3Url);
-    print("🔴 Error playing audio: $e");
-    ScaffoldMessenger.of(context).showSnackBar(
-       SnackBar(
-        content: Text('Error playing audio: $e'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-    // _showUnsupportedMessage(context);
+//     // _showUnsupportedMessage(context);
+//   }
+// }
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  Future<void> configureAudioSession() async {
+    final session = await AudioSession.instance;
+    await session.configure(AudioSessionConfiguration.music());
   }
-}
+
+  Future<void> speakmessage(String mp3Url, BuildContext context) async {
+    try {
+      configureAudioSession();
+      // Stop current if playing
+      await _audioPlayer.stop();
+
+      // Set new source
+      await _audioPlayer.setUrl(mp3Url);
+
+      // Play
+      await _audioPlayer.play();
+    } catch (e) {
+      print("🔴 Error playing audio: $e");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error playing audio: $e'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
 
   void _showUnsupportedMessage(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1311,7 +1348,8 @@ Future<void> speakmessage(String mp3Url, BuildContext context) async {
       });
 
       final uri =
-          "https://chatbotapi.ortdemo.com/api/apiapp/speech_to_text_translate";
+    //  "https://newchatbotapi.ortdemo.com/api/apiapp/speech_to_text_translate";
+         "https://chatbotapi.ortdemo.com/api/apiapp/speech_to_text_translate";
 
       FormData formData = FormData.fromMap({
         'text_prompt': text == "" ? detectedText : text,

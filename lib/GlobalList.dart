@@ -24,8 +24,10 @@ Future<String> getCachedAudioPath(String message, String remoteUrl) async {
   final dir = await getApplicationDocumentsDirectory();
 
   // Use hash of message to uniquely identify audio
-  final hash = md5.convert(utf8.encode(message)).toString();
-  final filePath = '${dir.path}/$hash.mp3';
+  // final hash = md5.convert(utf8.encode(message)).toString();
+  // final filePath = '${dir.path}/$hash.mp3';
+final timestamp = DateTime.now().millisecondsSinceEpoch;
+final filePath = '${dir.path}/${timestamp}_${md5.convert(utf8.encode(message))}.mp3';
 
   final file = File(filePath);
   if (!await file.exists()) {

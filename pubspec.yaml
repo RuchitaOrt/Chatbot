@@ -61,6 +61,7 @@ dependencies:
   flutter_secure_storage:
   uuid: ^4.0.0
   just_audio: ^0.9.36
+  audio_session: ^0.1.16
   # audioplayers: ^5.2.1
 
   

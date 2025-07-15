@@ -751,10 +751,12 @@ String getHoldMicText(String langCode, bool isRecording) {
 
       var uri = Uri.parse(
           // "http://chatbot.khushiyaann.com/api/apiapp/question_speech_to_text_translate"
-          "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate");
+           "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate"
+          //"https://newchatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate" 
+          );
       var request = http.MultipartRequest('POST', uri);
-      print(
-          "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate");
+      // print(
+      //     "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate");
 
       print(text);
       // print(language);
