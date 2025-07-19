@@ -11,6 +11,7 @@ import 'package:chat_bot/onboardingScreen.dart';
 import 'package:chat_bot/splash_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../SpeechRecordScreenSecond.dart';
 import '../Speech_Page_Spanish.dart';
 import '../chatbot_spanish.dart';
 import '../translator_page.dart';
@@ -52,26 +53,35 @@ class Routers {
       //   return MaterialPageRoute(
       //     builder: (_) => Chatbot_Spanish(selectedIndex: 1,),
       //   );
-        // case Translator_Page.route:
-        // return MaterialPageRoute(
-        //   builder: (_) => Translator_Page(selectedIndex: 1,),
-        // );
-        case LanguageDashboard.route:
+      // case Translator_Page.route:
+      // return MaterialPageRoute(
+      //   builder: (_) => Translator_Page(selectedIndex: 1,),
+      // );
+      case LanguageDashboard.route:
         return MaterialPageRoute(
           builder: (_) => LanguageDashboard(),
         );
-        case ChatSessionListPage.route:
+      case ChatSessionListPage.route:
         return MaterialPageRoute(
           builder: (_) => ChatSessionListPage(),
         );
-        case SpeechRecordScreen.route:
-         final args = settings.arguments as String? ?? '';
+      case SpeechRecordScreen.route:
+        final args = settings.arguments as String? ?? '';
         return MaterialPageRoute(
-          builder: (_) => SpeechRecordScreen(language: args,),
+          builder: (_) => SpeechRecordScreen(
+            language: args,
+          ),
         );
-         case OnboardingScreenUI.route:
+      case OnboardingScreenUI.route:
         return MaterialPageRoute(
           builder: (_) => OnboardingScreenUI(),
+        );
+      case SpeechRecordScreenSecond.route:
+        final args = settings.arguments as String? ?? '';
+        return MaterialPageRoute(
+          builder: (_) => SpeechRecordScreenSecond(
+            language: args,
+          ),
         );
       default:
         return MaterialPageRoute(builder: (_) => Onboardingscreen());

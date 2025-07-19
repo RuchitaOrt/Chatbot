@@ -33,19 +33,21 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart'; // Make sure you added mime dependency in pubspec.yaml
 import 'package:path/path.dart';
-import 'package:uuid/uuid.dart'; // For basename()
+import 'package:uuid/uuid.dart';
 
-class SpeechRecordScreen extends StatefulWidget {
+import 'chatbotSecond.dart'; // For basename()
+
+class SpeechRecordScreenSecond extends StatefulWidget {
   final String? language;
-  static const String route = "/speechRecord";
+  static const String route = "/speechSecondRecord";
 
-  const SpeechRecordScreen({super.key, this.language});
+  const SpeechRecordScreenSecond({super.key, this.language});
 
   @override
-  _SpeechRecordScreenState createState() => _SpeechRecordScreenState();
+  _SpeechRecordScreenSecondState createState() => _SpeechRecordScreenSecondState();
 }
 
-class _SpeechRecordScreenState extends State<SpeechRecordScreen>
+class _SpeechRecordScreenSecondState extends State<SpeechRecordScreenSecond>
     with SingleTickerProviderStateMixin {
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
@@ -66,8 +68,8 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
   void initState() {
     super.initState();
 
-    print("widget.language");
-    // print(widget.language);
+    // print("widget.language");
+    print('Language Received: ${widget.language}');
     getdeviceInfo();
 
     _initPermissions();
@@ -533,10 +535,10 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
     SizeConfig().init(context);
     return WillPopScope(
       onWillPop: () async {
-        _getOutOfApp();
-        // Future.delayed(const Duration(milliseconds: 100), () {
-        //   SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-        // });
+        // _getOutOfApp();
+        Future.delayed(const Duration(milliseconds: 100), () {
+          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+        });
         return false;
       },
       child: Scaffold(
@@ -552,45 +554,6 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
                 width: SizeConfig.blockSizeVertical * 5,
               ),
               const Spacer(),
-              // PopupMenuButton<String>(
-              //   icon: SvgPicture.asset(
-              //     "assets/images/menu.svg",
-              //     width: SizeConfig.blockSizeHorizontal * 6,
-              //     height: SizeConfig.blockSizeHorizontal * 6,
-              //     color: const Color(0xff2b3e2b),
-              //   ),
-              //   itemBuilder: (context) => [
-              //     PopupMenuItem<String>(
-              //       value: 'about',
-              //       height: SizeConfig.blockSizeVertical * 4,
-              //       child: Text(
-              //         'About Us',
-              //         style: TextStyle(
-              //             fontSize: SizeConfig.blockSizeHorizontal * 3.2),
-              //       ),
-              //     ),
-              //   ],
-              //   onSelected: (value) {
-              //     if (value == 'about') {
-              //       showDialog(
-              //         context: context,
-              //         builder: (context) => AlertDialog(
-              //           title: const Text('About Us'),
-              //           content: const Text('This is the best AI Chatbot app!'),
-              //           actions: [
-              //             TextButton(
-              //               onPressed: () => Navigator.pop(context),
-              //               child: const Text(
-              //                 'Close',
-              //                 style: TextStyle(color: Color(0xff2b3e2b)),
-              //               ),
-              //             )
-              //           ],
-              //         ),
-              //       );
-              //     }
-              //   },
-              // ),
             ],
           ),
         ),
@@ -598,63 +561,66 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
           reverse: true,
           child: Padding(
             padding: EdgeInsets.all(SizeConfig.blockSizeHorizontal * 3),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: SizeConfig.blockSizeVertical * 8),
-                Lottie.asset(
-                  'assets/images/anim_bot.json',
-                  height: SizeConfig.blockSizeVertical * 30,
-                  animate: _speechToText.isNotListening,
-                ),
-                SizedBox(height: SizeConfig.blockSizeVertical * 10),
-                Text(
-                  // _isRecording ? 'Listening....' : 'How can I help you?',
-                  getHelpText(GlobalLists.languageDetected, _isRecording),
-                  style: TextStyle(
-                    fontSize: SizeConfig.blockSizeHorizontal * 4,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
+            child: Container(
+              width:SizeConfig.screenWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(height: SizeConfig.blockSizeVertical * 8),
+                  Lottie.asset(
+                    'assets/images/anim_bot.json',
+                    height: SizeConfig.blockSizeVertical * 30,
+                    animate: _speechToText.isNotListening,
                   ),
-                ),
-                SizedBox(height: SizeConfig.blockSizeVertical * 2),
-                if (!isLoading)
-                  GestureDetector(
-                    onLongPressStart: (_) => _startListening(),
-                    onLongPressEnd: (_) => _stopListening(),
-                    child: Lottie.asset(
-                      'assets/images/speech_anim.json',
-                      height: SizeConfig.blockSizeVertical * 12,
-                      width: SizeConfig.blockSizeVertical * 12,
-                      animate: _isRecording,
+                  SizedBox(height: SizeConfig.blockSizeVertical * 10),
+                  Text(
+                    // _isRecording ? 'Listening....' : 'How can I help you?',
+                    getHelpText(GlobalLists.languageDetected, _isRecording),
+                    style: TextStyle(
+                      fontSize: SizeConfig.blockSizeHorizontal * 4,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
                     ),
                   ),
-                if (isLoading)
-                  Center(
-                    child: SizedBox(
-                      width: SizeConfig.blockSizeHorizontal * 20,
-                      height: SizeConfig.blockSizeHorizontal * 20,
-                      child: const CircularProgressIndicator(
-                        color: Color(0xff2B3E2B),
-                        strokeWidth: 8,
+                  SizedBox(height: SizeConfig.blockSizeVertical * 2),
+                  if (!isLoading)
+                    GestureDetector(
+                      onLongPressStart: (_) => _startListening(),
+                      onLongPressEnd: (_) => _stopListening(),
+                      child: Lottie.asset(
+                        'assets/images/speech_anim.json',
+                        height: SizeConfig.blockSizeVertical * 12,
+                        width: SizeConfig.blockSizeVertical * 12,
+                        animate: _isRecording,
                       ),
                     ),
+                  if (isLoading)
+                    Center(
+                      child: SizedBox(
+                        width: SizeConfig.blockSizeHorizontal * 20,
+                        height: SizeConfig.blockSizeHorizontal * 20,
+                        child: const CircularProgressIndicator(
+                          color: Color(0xff2B3E2B),
+                          strokeWidth: 8,
+                        ),
+                      ),
+                    ),
+                  SizedBox(height: SizeConfig.blockSizeVertical * 2),
+                  Text(
+                    getHoldMicText(GlobalLists.languageDetected, _isRecording),
+                    // _isRecording
+                    //     ? "Release to stop"
+                    //     : "Hold the microphone to speak",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: SizeConfig.blockSizeHorizontal * 4,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                SizedBox(height: SizeConfig.blockSizeVertical * 2),
-                Text(
-                  getHoldMicText(GlobalLists.languageDetected, _isRecording),
-                  // _isRecording
-                  //     ? "Release to stop"
-                  //     : "Hold the microphone to speak",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: SizeConfig.blockSizeHorizontal * 4,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                textfunction()
-              ],
+                  // textfunction()
+                ],
+              ),
             ),
           ),
         ),
@@ -723,8 +689,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
                       dismissKeyboard();
                       widget.language == null
                           ? uploadQuestionAudioFile(null, "", text)
-                          : uploadQuestionAudioFile(
-                              null, widget.language!, text);
+                          : uploadQuestionAudioFile( null, widget.language!, text);
                       _controllerText.clear();
                     }
                   },
@@ -755,8 +720,9 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
 
       var uri = Uri.parse(
           // "http://chatbot.khushiyaann.com/api/apiapp/question_speech_to_text_translate"
-          "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate"
+          // "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate"
           //"https://newchatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate"
+           "https://ams.ortdemo.com/bhash/upload-audio"
           );
       var request = http.MultipartRequest('POST', uri);
       // print(
@@ -764,9 +730,9 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
 
       print(text);
       // print(language);
-      request.fields['text_prompt'] = text;
-      request.fields['language_name_text'] = GlobalLists.languageDetected;
-      request.fields['session_id'] = "";
+      // request.fields['text_prompt'] = text;
+      // request.fields['language_name_text'] = GlobalLists.languageDetected;
+      // request.fields['session_id'] = "";
 
       print(text);
       print(request.fields);
@@ -775,7 +741,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
         final fileName = basename(file.path);
 
         request.files.add(await http.MultipartFile.fromPath(
-          'audio',
+          'file',
           file.path,
           contentType: mimeType != null
               ? MediaType.parse(mimeType)
@@ -792,24 +758,24 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
       if (response.statusCode == 200) {
         final respStr = await response.stream.bytesToString();
         final Map<String, dynamic> jsonResponse = json.decode(respStr);
-        final String languageDetected = jsonResponse['detected_lang'];
-        //1July
+        final String languageDetected = jsonResponse['detectedLanguageName'];
+         //1July
         // GlobalLists.languageDetected = languageDetected;
-        GlobalLists.sessionID = jsonResponse['session_id'];
+        // GlobalLists.sessionID = jsonResponse['session_id'];
         print("DETECTED LANGUAGE");
         print(GlobalLists.languageDetected);
-        final String question = jsonResponse['question'];
+        final String question = jsonResponse['transcript'];
         // final String content = jsonResponse['content'];
-        final String languageName = ""; //jsonResponse['language_name'];
+        final String languageName =  "";//jsonResponse['language_name'];
 
         if (file != null) {
           Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (context) => Chatbot(
-                selectedIndex: 2,
+              builder: (context) => ChatbotSecond(
+                selectedIndex: 3,
                 speechdata: question,
                 replydata: "",
-                languageName: jsonResponse['detected_lang'],
+                languageName: jsonResponse['detectedLanguageName'],
                 file: file,
               ),
             ),
@@ -818,8 +784,8 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
         } else {
           Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (context) => Chatbot(
-                selectedIndex: 2,
+              builder: (context) => ChatbotSecond(
+                selectedIndex: 3,
                 speechdata: question,
                 replydata: "",
                 languageName: languageName,
