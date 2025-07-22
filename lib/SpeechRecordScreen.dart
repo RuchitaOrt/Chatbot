@@ -530,10 +530,10 @@ String getHoldMicText(String langCode, bool isRecording) {
     SizeConfig().init(context);
     return WillPopScope(
       onWillPop: () async {
-        _getOutOfApp();
-        // Future.delayed(const Duration(milliseconds: 100), () {
-        //   SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-        // });
+        // _getOutOfApp();
+        Future.delayed(const Duration(milliseconds: 100), () {
+          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+        });
         return false;
       },
       child: Scaffold(
@@ -761,8 +761,10 @@ String getHoldMicText(String langCode, bool isRecording) {
       print(text);
       // print(language);
       request.fields['text_prompt'] = text;
-      request.fields['language_name_text'] =GlobalLists.languageDetected;
+      request.fields['language_name_text'] ="";
+      // GlobalLists.languageDetected;
       request.fields['session_id'] = "";
+       request.fields['bhashini']=GlobalLists.isbhashini;
    
       print(text);
       print(request.fields);
@@ -789,6 +791,7 @@ String getHoldMicText(String langCode, bool isRecording) {
         final respStr = await response.stream.bytesToString();
         final Map<String, dynamic> jsonResponse = json.decode(respStr);
         final String languageDetected = jsonResponse['detected_lang'];
+         GlobalLists.languageDetected= jsonResponse['detected_lang'];
         //1July
        // GlobalLists.languageDetected = languageDetected;
          GlobalLists.sessionID=jsonResponse['session_id'];
@@ -807,6 +810,7 @@ String getHoldMicText(String langCode, bool isRecording) {
                 replydata: "",
                 languageName: jsonResponse['detected_lang'],
                 file: file,
+                transcriptionData:  jsonResponse['transcription'],
               ),
             ),
             (Route route) => false,
@@ -819,6 +823,7 @@ String getHoldMicText(String langCode, bool isRecording) {
                 speechdata: question,
                 replydata: "",
                 languageName: languageName,
+                 transcriptionData:  jsonResponse['transcription'],
               ),
             ),
             (Route route) => false,
