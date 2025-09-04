@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -10,15 +9,13 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 
 class GlobalLists {
-  
-    static String languageDetected = "";
-     static String isButtonVisible = "false";
-      static String deviceID = "";
-      static String model = "";
-      static String version = "";
-       static String sessionID = "";
-        static String isbhashini = "0";
-     
+  static String languageDetected = "";
+  static String isButtonVisible = "false";
+  static String deviceID = "";
+  static String model = "";
+  static String version = "";
+  static String sessionID = "";
+  static String isbhashini = "0";
 }
 
 Future<String> getCachedAudioPath(String message, String remoteUrl) async {
@@ -27,8 +24,9 @@ Future<String> getCachedAudioPath(String message, String remoteUrl) async {
   // Use hash of message to uniquely identify audio
   // final hash = md5.convert(utf8.encode(message)).toString();
   // final filePath = '${dir.path}/$hash.mp3';
-final timestamp = DateTime.now().millisecondsSinceEpoch;
-final filePath = '${dir.path}/${timestamp}_${md5.convert(utf8.encode(message))}.mp3';
+  final timestamp = DateTime.now().millisecondsSinceEpoch;
+  final filePath =
+      '${dir.path}/${timestamp}_${md5.convert(utf8.encode(message))}.mp3';
 
   final file = File(filePath);
   if (!await file.exists()) {
