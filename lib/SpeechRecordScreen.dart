@@ -65,75 +65,75 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
   @override
   void initState() {
     super.initState();
-
+    
     print("widget.language");
     // print(widget.language);
     getdeviceInfo();
-
+    
     _initPermissions();
     _controller =
         AnimationController(vsync: this, duration: const Duration(seconds: 6))
           ..repeat(reverse: true);
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
   }
-
-  getdeviceInfo() async {
-    if (Platform.isAndroid) {
-      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-      GlobalLists.deviceID = "${androidInfo.id}";
-      GlobalLists.model = " ${androidInfo.manufacturer} ${androidInfo.model}";
-      GlobalLists.version = "${androidInfo.version.release}";
-      print("GlobalLists.deviceID");
-      print(GlobalLists.deviceID);
-
-      print(
-          'Running on ${androidInfo.id} ${androidInfo.model} ${androidInfo.manufacturer} ${androidInfo.version.release}');
-
-      // e.g. "Moto G (4)"
-    } else {
-      getPersistentDeviceId();
-    }
-  }
-
-  static const _secureStorage = FlutterSecureStorage();
-  static const _storageKey = 'persistent_device_id';
-
-  Future<String> getPersistentDeviceId() async {
-    // Check if stored
-
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-
-    final ios = await deviceInfo.iosInfo;
-    GlobalLists.model = "${ios.name}";
-    GlobalLists.version = "${ios.systemVersion}";
-    GlobalLists.deviceID = ios.identifierForVendor ?? const Uuid().v4();
-    print(
-        'Running on IOS ${ios.identifierForVendor} ${ios.name} ${ios.systemVersion}');
-
-    String? storedId = await _secureStorage.read(key: _storageKey);
-
-    if (storedId != null) return storedId;
-
-    // Fallback: Try identifierForVendor on iOS
-    String newId = "";
-    if (Platform.isIOS) {
-      final iosInfo = await DeviceInfoPlugin().iosInfo;
-      newId = iosInfo.identifierForVendor ?? const Uuid().v4();
-      GlobalLists.deviceID = iosInfo.identifierForVendor ?? const Uuid().v4();
-    }
-    print("GlobalLists.deviceID");
+getdeviceInfo()
+  async {
+    if(Platform.isAndroid)
+    {
+ DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+GlobalLists.deviceID="${androidInfo.id}";
+GlobalLists.model=" ${androidInfo.manufacturer} ${androidInfo.model}";
+GlobalLists.version="${androidInfo.version.release}";
+ print("GlobalLists.deviceID");
     print(GlobalLists.deviceID);
-    // else {
-    //   newId = const Uuid().v4();
-    //   GlobalLists.deviceID=newId;
+ 
+print('Running on ${androidInfo.id} ${androidInfo.model} ${androidInfo.manufacturer} ${androidInfo.version.release}'); 
+    
+ // e.g. "Moto G (4)"
+    }else{
+getPersistentDeviceId();
 
-    // }
-
-    await _secureStorage.write(key: _storageKey, value: GlobalLists.deviceID);
-    return newId;
+    }
+   
   }
+static const _secureStorage = FlutterSecureStorage();
+static const _storageKey = 'persistent_device_id';
 
+Future<String> getPersistentDeviceId() async {
+  // Check if stored
+
+  DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+
+final ios = await deviceInfo.iosInfo;
+   GlobalLists.model="${ios.name}";
+GlobalLists.version="${ios.systemVersion}";
+ GlobalLists.deviceID= ios.identifierForVendor ?? const Uuid().v4();
+print('Running on IOS ${ios.identifierForVendor} ${ios.name} ${ios.systemVersion}'); 
+
+  String? storedId = await _secureStorage.read(key: _storageKey);
+
+
+  if (storedId != null) return storedId;
+
+  // Fallback: Try identifierForVendor on iOS
+  String newId = "";
+  if (Platform.isIOS) {
+    final iosInfo = await DeviceInfoPlugin().iosInfo;
+    newId = iosInfo.identifierForVendor ?? const Uuid().v4();
+    GlobalLists.deviceID= iosInfo.identifierForVendor ?? const Uuid().v4();
+  } 
+   print("GlobalLists.deviceID");
+    print(GlobalLists.deviceID);
+  // else {
+  //   newId = const Uuid().v4();
+  //   GlobalLists.deviceID=newId;
+    
+  // }
+
+  await _secureStorage.write(key: _storageKey, value: GlobalLists.deviceID);
+  return newId;
+}
   Future<void> _initPermissions() async {
     await Permission.microphone.request();
     await Permission.speech.request();
@@ -206,9 +206,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
             ),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(
-              routeGlobalKey.currentContext!,
-            ),
+            onPressed: () => Navigator.pop(routeGlobalKey.currentContext!,),
             child: const Text("Cancel",
                 style: TextStyle(
                   color: Color(0xff2b3e2b),
@@ -218,57 +216,56 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
       ),
     );
   }
+Future<void> checkIOSMicrophonePermission() async {
+  final micStatus = await Permission.microphone.status;
+  final speechStatus = await Permission.speech.status;
 
-  Future<void> checkIOSMicrophonePermission() async {
-    final micStatus = await Permission.microphone.status;
-    final speechStatus = await Permission.speech.status;
+  print("Microphone permission: $micStatus");
+  print("Speech permission: $speechStatus");
 
-    print("Microphone permission: $micStatus");
-    print("Speech permission: $speechStatus");
+  // If both permissions are granted, you're done
+  if (micStatus.isGranted && speechStatus.isGranted) return;
 
-    // If both permissions are granted, you're done
-    if (micStatus.isGranted && speechStatus.isGranted) return;
-
-    // If either is permanently denied, send to settings
-    if (micStatus.isPermanentlyDenied || speechStatus.isPermanentlyDenied) {
-      print("RUCHITA - one or both permissions permanently denied");
-      _showSettingsDialog();
-      return;
-    }
-
-    // Request both permissions (iOS shows popups)
-    final micResult = await Permission.microphone.request();
-    final speechResult = await Permission.speech.request();
-
-    print("Requested microphone: $micResult");
-    print("Requested speech: $speechResult");
-
-    if (micResult.isGranted && speechResult.isGranted) {
-      // Permissions granted — proceed
-      return;
-    }
-
-    // If one of them is permanently denied now, send to settings
-    if (micResult.isPermanentlyDenied || speechResult.isPermanentlyDenied) {
-      print("RUCHITA - permanent denial after request");
-      _showSettingsDialog();
-      return;
-    }
-
-    // Optionally: handle temporary denial
-    print("RUCHITA - permissions temporarily denied");
-    // _showPermissionDeniedToast(); // Optional
+  // If either is permanently denied, send to settings
+  if (micStatus.isPermanentlyDenied || speechStatus.isPermanentlyDenied) {
+    print("RUCHITA - one or both permissions permanently denied");
+    _showSettingsDialog();
+    return;
   }
+
+  // Request both permissions (iOS shows popups)
+  final micResult = await Permission.microphone.request();
+  final speechResult = await Permission.speech.request();
+
+  print("Requested microphone: $micResult");
+  print("Requested speech: $speechResult");
+
+  if (micResult.isGranted && speechResult.isGranted) {
+    // Permissions granted — proceed
+    return;
+  }
+
+  // If one of them is permanently denied now, send to settings
+  if (micResult.isPermanentlyDenied || speechResult.isPermanentlyDenied) {
+    print("RUCHITA - permanent denial after request");
+    _showSettingsDialog();
+    return;
+  }
+
+  // Optionally: handle temporary denial
+  print("RUCHITA - permissions temporarily denied");
+  // _showPermissionDeniedToast(); // Optional
+}
 
   Future<void> checkMicrophonePermission() async {
     final status = await Permission.microphone.status;
     print("status Check MicroPHONE");
     print("status Check MicroPHONE ${status}");
-    print(status);
+  print(status);
     if (status.isGranted) return;
 
     if (status.isPermanentlyDenied) {
-      print("RUCHITA 1");
+        print("RUCHITA 1");
       _showSettingsDialog();
       return;
     }
@@ -281,39 +278,40 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
     }
 
     if (result.isPermanentlyDenied) {
-      print("RUCHITA permnent");
+        print("RUCHITA permnent");
       _showSettingsDialog();
       return;
     }
+
   }
 
-  Future<void> _startListening() async {
-    // if (Platform.isIOS) {
-    //   final micStatus = await Permission.microphone.status;
-    //   final speechStatus = await Permission.speech.status;
+Future<void> _startListening() async {
+  // if (Platform.isIOS) {
+  //   final micStatus = await Permission.microphone.status;
+  //   final speechStatus = await Permission.speech.status;
 
-    //   if (!micStatus.isGranted || !speechStatus.isGranted) {
-    //     if (micStatus.isPermanentlyDenied || speechStatus.isPermanentlyDenied) {
-    //       // Show dialog to open settings
-    //       _showSettingsDialog();
-    //       return;
-    //     }
+  //   if (!micStatus.isGranted || !speechStatus.isGranted) {
+  //     if (micStatus.isPermanentlyDenied || speechStatus.isPermanentlyDenied) {
+  //       // Show dialog to open settings
+  //       _showSettingsDialog(); 
+  //       return;
+  //     }
 
-    //     // Request once (if not permanently denied)
-    //     final micResult = await Permission.microphone.request();
-    //     final speechResult = await Permission.speech.request();
+  //     // Request once (if not permanently denied)
+  //     final micResult = await Permission.microphone.request();
+  //     final speechResult = await Permission.speech.request();
 
-    //     if (!micResult.isGranted || !speechResult.isGranted) {
-    //       // Show optional toast or dialog
-    //       print("❌ Permissions not granted");
-    //       return;
-    //     }
-    //   }
-    // } else
-    if (Platform.isAndroid) {
-      await checkMicrophonePermission(); // Your Android-specific logic
-    }
-
+  //     if (!micResult.isGranted || !speechResult.isGranted) {
+  //       // Show optional toast or dialog
+  //       print("❌ Permissions not granted");
+  //       return;
+  //     }
+  //   }
+  // } else 
+  if (Platform.isAndroid) {
+    await checkMicrophonePermission(); // Your Android-specific logic
+  }
+   
     print("RUCHITA");
     if (!_isSpeechInitialized) {
       _isSpeechInitialized = await _speechToText.initialize(
@@ -322,7 +320,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
       );
 
       if (!_isSpeechInitialized) {
-        //_showSettingsDialog();
+ //_showSettingsDialog();
         print("⚠️ Failed to initialize speech recognition");
         return;
       }
@@ -364,8 +362,9 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
           codec: Codec.pcm16WAV, // ✅ WAV format
           sampleRate: 44100,
         );
+        
       }
-
+     
       print("🎤 onResult:");
       await _speechToText.listen(onResult: _onSpeechResult);
 
@@ -455,88 +454,86 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
   void dismissKeyboard() {
     _focusNode.unfocus(); // Dismisses keyboard
   }
+Map<String, String> helpMainTranslations = {
+  'English': 'How can I help you?',
+  'Hindi': 'मैं आपकी कैसे मदद कर सकता हूँ?',
+  'Marathi': 'मी तुम्हाला कशी मदत करू शकतो?',
+  'Gujarati': 'હું તમને કેવી રીતે મદદ કરી શકું?',
+  'Spanish': '¿Cómo puedo ayudarte?',
+  'Chinese (Simplified)': "我怎么可以帮你？"     // Mandarin Simplified
 
-  Map<String, String> helpMainTranslations = {
-    'English': 'How can I help you?',
-    'Hindi': 'मैं आपकी कैसे मदद कर सकता हूँ?',
-    'Marathi': 'मी तुम्हाला कशी मदत करू शकतो?',
-    'Gujarati': 'હું તમને કેવી રીતે મદદ કરી શકું?',
-    'Spanish': '¿Cómo puedo ayudarte?',
-    'Chinese (Simplified)': "我怎么可以帮你？" // Mandarin Simplified
-  };
-  Map<String, String> holdMicTranslations = {
+};
+Map<String, String> holdMicTranslations = {
     // Mandarin Simplified,
-    "English": "Hold the microphone to speak.",
-    "Hindi": "बोलने के लिए माइक्रोफोन पकड़ें।",
-    "Marathi": "बोलण्यासाठी मायक्रोफोन पकडा.",
-    "Gujarati": "બોલવા માટે માઇક્રોફોન પકરો.",
-    "Spanish": "Mantén presionado el micrófono para hablar.",
-    "Chinese (Simplified)": "按住麥克風說話。"
-  };
-  final Map<String, String> releaseToStopTranslations = {
-    'English': 'Release to stop',
-    'Hindi': 'रोकने के लिए छोड़ें',
-    'Marathi': 'थांबवण्यासाठी सोडा',
-    'Gujarati': 'બંધ કરવા માટે છોડો',
-    'Spanish': 'Suelta para detener',
-    'Chinese (Simplified)': '松开以停止', // Mandarin (Simplified)
-  };
+  "English" : "Hold the microphone to speak.",
+"Hindi": "बोलने के लिए माइक्रोफोन पकड़ें।",
+"Marathi": "बोलण्यासाठी मायक्रोफोन पकडा.",
+"Gujarati": "બોલવા માટે માઇક્રોફોન પકરો.",
+"Spanish": "Mantén presionado el micrófono para hablar.",
+"Chinese (Simplified)": "按住麥克風說話。"
 
-  final Map<String, String> listeningText = {
-    'English': 'Listening...',
-    'Hindi': 'सुन रहा हूँ...',
-    'Marathi': 'ऐकत आहे...',
-    'Gujarati': 'સાંભળી રહ્યો છું...',
-    'Spanish': 'Escuchando...',
-    'Chinese (Simplified)': '正在聆听...',
-  };
+};
+final Map<String, String> releaseToStopTranslations = {
+  'English': 'Release to stop',
+  'Hindi': 'रोकने के लिए छोड़ें',
+  'Marathi': 'थांबवण्यासाठी सोडा',
+  'Gujarati': 'બંધ કરવા માટે છોડો',
+  'Spanish': 'Suelta para detener',
+  'Chinese (Simplified)': '松开以停止', // Mandarin (Simplified)
+};
 
-  final Map<String, String> orTranslations = {
-    'English': 'or',
-    'Hindi': 'या',
-    'Marathi': 'किंवा',
-    'Gujarati': 'અથવા',
-    'Spanish': 'o',
-    'Chinese (Simplified)': '或者',
-  };
+final Map<String, String> listeningText = {
+  'English': 'Listening...',
+  'Hindi': 'सुन रहा हूँ...',
+  'Marathi': 'ऐकत आहे...',
+  'Gujarati': 'સાંભળી રહ્યો છું...',
+  'Spanish': 'Escuchando...',
+  'Chinese (Simplified)': '正在聆听...',
+};
 
-  String getORText(String langCode) {
-    return orTranslations[langCode] ?? 'or';
-  }
 
-  final Map<String, String> writeHintText = {
-    'English': 'Write anything here...',
-    'Hindi': 'यहाँ कुछ भी लिखें...',
-    'Marathi': 'इथे काहीही लिहा...',
-    'Gujarati': 'અહીં કંઈપણ લખો...',
-    'Spanish': 'Escribe algo aquí...',
-    'Chinese (Simplified)': '在这里写点什么...',
-  };
 
-  String getWriteHintText(String langCode) {
-    return writeHintText[langCode] ?? 'Write anything here...';
-  }
+final Map<String, String> orTranslations = {
+  'English': 'or',
+  'Hindi': 'या',
+  'Marathi': 'किंवा',
+  'Gujarati': 'અથવા',
+  'Spanish': 'o',
+  'Chinese (Simplified)': '或者',
+};
+String getORText(String langCode) {
 
-  String getHelpText(String langCode, bool isRecording) {
-    if (isRecording) return listeningText[langCode] ?? 'Listening....';
-    return helpMainTranslations[langCode] ?? 'How can I help you?';
-  }
+  return orTranslations[langCode] ?? 'or';
+}
+final Map<String, String> writeHintText = {
+  'English': 'Write anything here...',
+  'Hindi': 'यहाँ कुछ भी लिखें...',
+  'Marathi': 'इथे काहीही लिहा...',
+  'Gujarati': 'અહીં કંઈપણ લખો...',
+  'Spanish': 'Escribe algo aquí...',
+  'Chinese (Simplified)': '在这里写点什么...',
+};
+String getWriteHintText(String langCode) {
 
-  String getHoldMicText(String langCode, bool isRecording) {
-    if (isRecording)
-      return releaseToStopTranslations[langCode] ?? "Release to stop";
-
-    return holdMicTranslations[langCode] ?? 'Hold the microphone to speak.';
-  }
-
+  return writeHintText[langCode] ?? 'Write anything here...';
+}
+String getHelpText(String langCode, bool isRecording) {
+  if (isRecording) return listeningText[langCode] ??  'Listening....';
+  return helpMainTranslations[langCode] ?? 'How can I help you?';
+}
+String getHoldMicText(String langCode, bool isRecording) {
+  if (isRecording) return releaseToStopTranslations[langCode] ??  "Release to stop";
+ 
+  return holdMicTranslations[langCode] ?? 'Hold the microphone to speak.';
+}
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     return WillPopScope(
       onWillPop: () async {
-        _getOutOfApp();
-        // Future.delayed(const Duration(milliseconds: 100), () {
-        //   SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-        // });
+        // _getOutOfApp();
+        Future.delayed(const Duration(milliseconds: 100), () {
+          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+        });
         return false;
       },
       child: Scaffold(
@@ -611,7 +608,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
                 SizedBox(height: SizeConfig.blockSizeVertical * 10),
                 Text(
                   // _isRecording ? 'Listening....' : 'How can I help you?',
-                  getHelpText(GlobalLists.languageDetected, _isRecording),
+                   getHelpText(GlobalLists.languageDetected, _isRecording),
                   style: TextStyle(
                     fontSize: SizeConfig.blockSizeHorizontal * 4,
                     fontWeight: FontWeight.w400,
@@ -643,7 +640,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
                   ),
                 SizedBox(height: SizeConfig.blockSizeVertical * 2),
                 Text(
-                  getHoldMicText(GlobalLists.languageDetected, _isRecording),
+                  getHoldMicText(GlobalLists.languageDetected,_isRecording),
                   // _isRecording
                   //     ? "Release to stop"
                   //     : "Hold the microphone to speak",
@@ -705,12 +702,11 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
                     focusNode: _focusNode,
                     style: TextStyle(
                         fontSize: SizeConfig.blockSizeHorizontal * 3.5),
-                    decoration: InputDecoration.collapsed(
-                        hintText: getWriteHintText(
-                      GlobalLists.languageDetected,
-                    )
-                        //  "Write anything here...",
-                        ),
+                    decoration:  InputDecoration.collapsed(
+                      hintText:
+                      getWriteHintText(GlobalLists.languageDetected,)
+                      //  "Write anything here...",
+                    ),
                   ),
                 ),
               ),
@@ -749,14 +745,14 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
     try {
       setState(() {
         //  GlobalLists.languageDetected="";
-        GlobalLists.sessionID = "";
+        GlobalLists.sessionID="";
         isLoading = true;
       });
 
       var uri = Uri.parse(
           // "http://chatbot.khushiyaann.com/api/apiapp/question_speech_to_text_translate"
-          "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate"
-          //"https://newchatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate"
+           "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate"
+          //"https://newchatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate" 
           );
       var request = http.MultipartRequest('POST', uri);
       // print(
@@ -765,9 +761,11 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
       print(text);
       // print(language);
       request.fields['text_prompt'] = text;
-      request.fields['language_name_text'] = GlobalLists.languageDetected;
+      request.fields['language_name_text'] ="";
+      // GlobalLists.languageDetected;
       request.fields['session_id'] = "";
-
+       request.fields['bhashini']=GlobalLists.isbhashini;
+   
       print(text);
       print(request.fields);
       if (file != null) {
@@ -793,9 +791,10 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
         final respStr = await response.stream.bytesToString();
         final Map<String, dynamic> jsonResponse = json.decode(respStr);
         final String languageDetected = jsonResponse['detected_lang'];
+         GlobalLists.languageDetected= jsonResponse['detected_lang'];
         //1July
-        // GlobalLists.languageDetected = languageDetected;
-        GlobalLists.sessionID = jsonResponse['session_id'];
+       // GlobalLists.languageDetected = languageDetected;
+         GlobalLists.sessionID=jsonResponse['session_id'];
         print("DETECTED LANGUAGE");
         print(GlobalLists.languageDetected);
         final String question = jsonResponse['question'];
@@ -811,6 +810,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
                 replydata: "",
                 languageName: jsonResponse['detected_lang'],
                 file: file,
+                transcriptionData:  jsonResponse['transcription'],
               ),
             ),
             (Route route) => false,
@@ -823,6 +823,7 @@ class _SpeechRecordScreenState extends State<SpeechRecordScreen>
                 speechdata: question,
                 replydata: "",
                 languageName: languageName,
+                 transcriptionData:  jsonResponse['transcription'],
               ),
             ),
             (Route route) => false,

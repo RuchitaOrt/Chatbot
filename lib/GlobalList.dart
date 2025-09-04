@@ -17,6 +17,7 @@ class GlobalLists {
       static String model = "";
       static String version = "";
        static String sessionID = "";
+        static String isbhashini = "0";
      
 }
 

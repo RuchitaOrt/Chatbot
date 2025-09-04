@@ -55,7 +55,8 @@ class Chatbot extends StatefulWidget {
       this.speechdata,
       this.languageName,
       this.replydata,
-      this.file});
+      this.file,
+      this.transcriptionData});
 
   static const String route = "/chatBot";
   int selectedIndex = 0;
@@ -63,6 +64,7 @@ class Chatbot extends StatefulWidget {
   String? replydata = '';
   String? languageName = '';
   File? file;
+  String? transcriptionData;
 
   @override
   State<Chatbot> createState() => _ChatbotState();
@@ -256,9 +258,9 @@ String getExitSessionText(String langCode) {
         print("API INIT");
         if (widget.file != null) {
           uploadAudioFile1(
-              widget.file!, widget.speechdata!, widget.speechdata!);
+              widget.file!, widget.speechdata!, widget.speechdata!,widget.transcriptionData!);
         } else {
-          uploadAudioFile1(null, widget.speechdata!, widget.speechdata!);
+          uploadAudioFile1(null, widget.speechdata!, widget.speechdata!,widget.transcriptionData!);
         }
 
         widget.selectedIndex = 1;
@@ -285,8 +287,10 @@ String getExitSessionText(String langCode) {
 
       FormData formData = FormData.fromMap({
         'text_prompt': text,
-        'language_name_text': GlobalLists.languageDetected,
+        'language_name_text':"",
+        //  GlobalLists.languageDetected,
         'session_id': GlobalLists.sessionID,
+        "bhashini":GlobalLists.isbhashini
       });
 
       if (file != null) {
@@ -322,7 +326,9 @@ String getExitSessionText(String langCode) {
         final String languageName = jsonResponse['language_name'];
         final String changeQuestion = jsonResponse['button_question'];
         final String languageDetected = jsonResponse['detected_lang'];
+        final String transcriptionData= jsonResponse['transcription'];
         GlobalLists.sessionID = jsonResponse['session_id'];
+        GlobalLists.languageDetected= jsonResponse['detected_lang'];
         GlobalLists.isButtonVisible = jsonResponse['buttons'].toString();
         if (GlobalLists.isButtonVisible == "false") {
           //1july
@@ -361,7 +367,7 @@ String getExitSessionText(String langCode) {
                 });
               }
 
-              await uploadAudioFile1(file, question, question);
+              await uploadAudioFile1(file, question, question,transcriptionData);
             },
             onNoPressed: () {
               print("❌ No clicked!");
@@ -378,7 +384,7 @@ String getExitSessionText(String langCode) {
                   );
                 }
               });
-              uploadAudioFile1(file, question, question);
+              uploadAudioFile1(file, question, question,transcriptionData);
             },
           ));
         });
@@ -422,7 +428,7 @@ String getExitSessionText(String langCode) {
                   });
                 }
 
-                await uploadAudioFile1(file, question, question);
+                await uploadAudioFile1(file, question, question,transcriptionData);
               },
               onNoPressed: () {
                 print("❌ No clicked!");
@@ -440,7 +446,7 @@ String getExitSessionText(String langCode) {
                     );
                   }
                 });
-                uploadAudioFile1(file, question, question);
+                uploadAudioFile1(file, question, question,transcriptionData);
               },
             ));
           });
@@ -449,7 +455,7 @@ String getExitSessionText(String langCode) {
           _scrollToBottom();
           dismissKeyboard();
         } else {
-          uploadAudioFile1(file, question, question);
+          uploadAudioFile1(file, question, question,transcriptionData);
         }
 
         print('✅ Success: $jsonResponse');
@@ -489,68 +495,6 @@ String getExitSessionText(String langCode) {
     super.dispose();
   }
 
-//   Future<void> speak(String text, String langCode) async {
-//     // iOS, macOS only
-// await flutterTts.setVoice({"identifier": "com.apple.voice.compact.en-AU.Karen"});
-// await flutterTts.setVolume(1.0); // Max volume (0.0 - 1.0)
-// await flutterTts.setSpeechRate(0.5); // Optional: Adjust rate
-// await flutterTts.setPitch(1.0); // Optional
-
-// // iOS-specific fix: Set audio category
-// await flutterTts.setIosAudioCategory(
-//   IosTextToSpeechAudioCategory.playback,
-//   [
-//     IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
-//     IosTextToSpeechAudioCategoryOptions.mixWithOthers,
-//   ],
-// );
-// // iOS only
-// await flutterTts.setSharedInstance(true);
-//     await flutterTts.setLanguage(langCode);
-//     await flutterTts.speak(text);
-
-//   }
-
-
-//   Future<void> speak(String text, String langCode) async {
-//     await flutterTts.setSharedInstance(true); // Needed for iOS
-//     await flutterTts.setLanguage(langCode);
-
-//     // Optional but recommended: get voices and choose dynamically
-// //  await flutterTts.setVoice({"name": "Samantha", "locale": "en-US"});
-//     List voices = await flutterTts.getVoices;
-
-//     var samantha = voices.firstWhere(
-//       (v) => v['name'] == 'Samantha' && v['locale'] == 'en-US',
-//       orElse: () => null,
-//     );
-
-//     if (samantha != null) {
-//       await flutterTts.setVoice({"name": "Samantha", "locale": "en-US"});
-//     } else {
-//       print("⚠️ Samantha not installed. Using system default voice.");
-//       // Either:
-//       // - Use another available en-US voice
-//       // - Or skip setVoice() to let iOS use its system default TTS voice
-//     }
-//     await flutterTts.setPitch(1.0);
-//     await flutterTts.setSpeechRate(0.5);
-
-//     // This is KEY for proper routing to loudspeaker
-//     await flutterTts.setIosAudioCategory(
-//       IosTextToSpeechAudioCategory.playback,
-//       [
-//         IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
-//         IosTextToSpeechAudioCategoryOptions.mixWithOthers,
-//       ],
-//     );
-
-//     // setVolume is ignored on iOS, but doesn’t hurt to keep
-//     await flutterTts.setVolume(1.0);
-
-//     await flutterTts.awaitSpeakCompletion(true);
-//     await flutterTts.speak(text);
-//   }
 
   final ScrollController _scrollController = ScrollController();
   @override
@@ -704,32 +648,7 @@ String getExitSessionText(String langCode) {
                   ),
                 ),
 
-              // Align(
-              //   alignment: Alignment.bottomRight,
-              //   child:
-              //    Padding(
-              //     padding: const EdgeInsets.only(right: 10),
-              //     child: Container(
-              //       height: SizeConfig.blockSizeVertical*4,
-              //       child: ElevatedButton.icon(
-              //               onPressed: () {
-              //                 if (_cancelToken != null && !_cancelToken!.isCancelled) {
-              //                   _cancelToken!.cancel("Upload cancelled by user.");
-              //                   print("🚫 Upload cancelled");
-              //                   setState(() {
-              //                     isLoading = false;
-              //                   });
-              //                 }
-              //               },
-              //               icon: Icon(Icons.cancel,color: Colors.white,),
-              //               label: Text("Cancel",style: TextStyle(color: Colors.white),),
-              //               style: ElevatedButton.styleFrom(
-              //                 backgroundColor: Color(0xff2b3e2b),
-              //               ),
-              //             ),
-              //     ),
-              //   ),
-              // ),
+           
 
               Container(
                 padding:
@@ -819,23 +738,7 @@ String getExitSessionText(String langCode) {
                         child: SvgPicture.asset("assets/images/send.svg",
                             width: 30, height: 30, color: Color(0xff2b3e2b)),
                       ),
-                    // IconButton(
-                    //   icon: const Icon(
-                    //     Icons.send,
-                    //     color: Color(0xff2b3e2b),
-                    //   ),
-                    //   onPressed: () async {
-                    //     await flutterTts.stop();
-                    //     final text = _controller.text.trim();
-                    //     if (text.isNotEmpty) {
-                    //       // detectLanguage(text);
-                    //             dismissKeyboard();
-                    //       uploadAudioFile1(null,text,);
-                    //       _controller.clear();
-                    //       // _hasSentSpeechResult = true;
-                    //     }
-                    //   },
-                    // ),
+                  
                   ],
                 ),
               ),
@@ -992,125 +895,6 @@ String getExitSessionText(String langCode) {
     });
   }
 
-  // Future<void> speakmessage(String message, BuildContext context) async {
-  //   try {
-  //     // _detectedLang="en-US";
-  //     // _detectedLang=GlobalLists.languageDetected;
-  //   //  Fluttertoast.showToast(msg: "_detectedLang ${_detectedLang}");
-  //     print("RUCHITA _detectedLang");
-  //     print(_detectedLang);
-  //     await flutterTts.setLanguage(_detectedLang);
-  //     // Check if TTS is available before speaking
-  //     var isAvailable = await flutterTts.isLanguageAvailable(_detectedLang);
-  //     if (!isAvailable) {
-  //       _showUnsupportedMessage(context);
-  //       return;
-  //     }
-  //     await flutterTts.speak(message);
-  //   } catch (e) {
-  //     _showUnsupportedMessage(context);
-  //   }
-  // }
-
-// Future<void> speakmessage(String audioUrl, BuildContext context) async {
-//   try {
-//     final dir = await getTemporaryDirectory();
-//     final localFile = File('${dir.path}/temp_audio.mp3');
-//  ScaffoldMessenger.of(context).showSnackBar(
-//        SnackBar(content: Text("localFile ${localFile.path}")),
-//     );
-//     // Download audio
-//     await Dio().download(audioUrl, localFile.path);
-
-//     final player = AudioPlayer();
-//     await player.setFilePath(localFile.path);
-//     await player.play();
-//   } catch (e) {
-//     print("🔴 Audio error: $e");
-//       if (e is DioError) {
-//     print("🔎 Dio error type: ${e.type}");
-//     print("🔎 Dio error message: ${e.message}");
-//     print("🔎 Dio response: ${e.response}");
-//   }
-//   ScaffoldMessenger.of(context).showSnackBar(
-//        SnackBar(content: Text("Device not supported for this audio $e")),
-//     );
-//     ScaffoldMessenger.of(context).showSnackBar(
-//        SnackBar(content: Text("Device not supported for this audio $e")),
-//     );
-//     ScaffoldMessenger.of(context).showSnackBar(
-//        SnackBar(content: Text("Device not supported for this audio $e")),
-//     );
-//     ScaffoldMessenger.of(context).showSnackBar(
-//        SnackBar(content: Text("Device not supported for this audio $e")),
-//     );
-//   }
-// }
-// Future<void> speakmessage(String audioUrl, BuildContext context) async {
-//   try {
-//     final dir = await getTemporaryDirectory();
-//     final filePath = '${dir.path}/speech.mp3';
-
-//     // Download the file
-//     await Dio().download(audioUrl, filePath);
-
-//     // Now play it using just_audio
-//     final player = AudioPlayer();
-//     await player.setFilePath(filePath); // ✅ Not setUrl!
-//     await player.play();
-//   } catch (e) {
-//     print("❌ Audio error: $e");
-
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(
-//         content: Text("Device not supported for this audio $e"),
-//         duration: Duration(seconds: 2),
-//       ),
-//     );
-//   }
-// }
-// Future<void> speakmessage(String mp3Url, BuildContext context) async {
-//   try {
-//     _audioPlayer?.dispose(); // Dispose previous if any
-//     _audioPlayer = AudioPlayer();
-// // "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-// // ScaffoldMessenger.of(context).showSnackBar(
-// //        SnackBar(
-// //         content: Text(mp3Url),
-// //         duration: Duration(seconds: 2),
-// //       ),
-// //     );
-//     await _audioPlayer!.setUrl(
-//       // "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-//       // "https://samplelib.com/lib/preview/wav/sample-3s.wav"
-//        mp3Url
-//       );
-      
-      
-//     await _audioPlayer!.play();
-// // ScaffoldMessenger.of(context).showSnackBar(
-// //        SnackBar(
-// //         content: Text(mp3Url),
-// //         duration: Duration(seconds: 2),
-// //       ),
-// //     );
-//     // Wait for completion (optional)
-//     _audioPlayer!.playerStateStream.firstWhere(
-//       (state) => state.processingState == ProcessingState.completed,
-//     );
-//   } catch (e) {
-//     print(mp3Url);
-//     print("🔴 Error playing audio: $e");
-//     ScaffoldMessenger.of(context).showSnackBar(
-//        SnackBar(
-//         content: Text('Error playing audio: $e'),
-//         duration: Duration(seconds: 2),
-//       ),
-//     );
-//     // _showUnsupportedMessage(context);
-//   }
-// }
-
   final AudioPlayer _audioPlayer = AudioPlayer();
   Future<void> configureAudioSession() async {
     final session = await AudioSession.instance;
@@ -1163,8 +947,8 @@ String getExitSessionText(String langCode) {
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: 500),
         pageBuilder: (context, animation, secondaryAnimation) =>
-            // SpeechRecordScreen(),
-          OnboardingScreenUI(),
+             SpeechRecordScreen(),
+          //OnboardingScreenUI(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           final opacity = animation.drive(
             Tween<double>(begin: 0.0, end: 1.0).chain(
@@ -1335,7 +1119,7 @@ String getExitSessionText(String langCode) {
   }
 
   Future<void> uploadAudioFile1(
-      File? file, String text, String detectedText) async {
+      File? file, String text, String detectedText,String transcriptionData) async {
     print("API RUCHITA");
     print("API INIT");
     print("RUCHITA 6 ${GlobalLists.languageDetected}");
@@ -1349,11 +1133,13 @@ String getExitSessionText(String langCode) {
 
       final uri =
     //  "https://newchatbotapi.ortdemo.com/api/apiapp/speech_to_text_translate";
-         "https://chatbotapi.ortdemo.com/api/apiapp/speech_to_text_translate";
+         "https://chatbotapi.ortdemo.com/api/apiapp/new_speech_to_text_translate";
 
       FormData formData = FormData.fromMap({
-        'text_prompt': text == "" ? detectedText : text,
-        'language_name_text': GlobalLists.languageDetected,
+        // 'text_prompt': text == "" ? detectedText : text,
+        'text_prompt':transcriptionData,
+        'language_code': 
+         GlobalLists.languageDetected,
         'device_id': GlobalLists.deviceID,
         'device_name': GlobalLists.model,
         'session_id': GlobalLists.sessionID,

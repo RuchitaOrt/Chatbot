@@ -15,7 +15,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'SpeechProvider.dart';
-import 'SpeechRecordScreenSecond.dart';
 
 final GlobalKey<NavigatorState> routeGlobalKey = GlobalKey();
 Future<void> main() async {
@@ -67,11 +66,10 @@ class _MyAppState extends State<MyApp> {
         // initialRoute: SplashScreen.route,
         initialRoute: 
         //Chatbot.route,
-        //   OnboardingScreenUI.route,
+          // OnboardingScreenUI.route,
         // LanguageDashboard.route,
         //  Onboardingscreen.route,
-       //SpeechRecordScreen.route,
-        SpeechRecordScreenSecond.route,
+      SpeechRecordScreen.route,
         onGenerateRoute: Routers.generateRoute,
       );
     
