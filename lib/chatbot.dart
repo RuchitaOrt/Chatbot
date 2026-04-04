@@ -32,6 +32,7 @@ import 'package:provider/provider.dart';
 
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+
 // import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
 import 'package:translator/translator.dart';
 
@@ -92,6 +93,7 @@ class _ChatbotState extends State<Chatbot>
   String _detectedLang = "en-US";
   late AnimationController _animationController;
   late Animation<double> _micGlowAnimation;
+
   // List<Map<String, String>> messages = [];
   List<ChatMessage> messages = [];
 
@@ -100,91 +102,94 @@ class _ChatbotState extends State<Chatbot>
   bool _speechEnabled = true;
   String _lastWords = '';
   bool isLoading = false;
+
   // ----
   DateTime? _lastApiCallTime;
   Timer? _apiCooldownTimer;
 
   CancelToken? _cancelToken;
+
   // AudioPlayer? _audioPlayer; // Declare at class level
 
-final Map<String, String> writeHintText = {
-  'English': 'Write anything here...',
-  'Hindi': 'यहाँ कुछ भी लिखें...',
-  'Marathi': 'इथे काहीही लिहा...',
-  'Gujarati': 'અહીં કંઈપણ લખો...',
-  'Spanish': 'Escribe algo aquí...',
-  'Chinese (Simplified)': '在这里写点什么...',
-};
-String getWriteHintText(String langCode) {
+  final Map<String, String> writeHintText = {
+    'English': 'Write anything here...',
+    'Hindi': 'यहाँ कुछ भी लिखें...',
+    'Marathi': 'इथे काहीही लिहा...',
+    'Gujarati': 'અહીં કંઈપણ લખો...',
+    'Spanish': 'Escribe algo aquí...',
+    'Chinese (Simplified)': '在这里写点什么...',
+  };
 
-  return writeHintText[langCode] ?? 'Write anything here...';
-}
+  String getWriteHintText(String langCode) {
+    return writeHintText[langCode] ?? 'Write anything here...';
+  }
 
-final Map<String, String> cancelTranslations = {
-  'English': 'Cancel',
-  'Hindi': 'रद्द करें',
-  'Marathi': 'रद्द करा',
-  'Gujarati': 'રદ કરો',
-  'Spanish': 'Cancelar',
-  'Chinese (Simplified)': '取消',
-};
+  final Map<String, String> cancelTranslations = {
+    'English': 'Cancel',
+    'Hindi': 'रद्द करें',
+    'Marathi': 'रद्द करा',
+    'Gujarati': 'રદ કરો',
+    'Spanish': 'Cancelar',
+    'Chinese (Simplified)': '取消',
+  };
 
-String getCancelText(String langCode) {
+  String getCancelText(String langCode) {
+    return cancelTranslations[langCode] ?? 'Cancel';
+  }
 
-  return cancelTranslations[langCode] ?? 'Cancel';
-}
-final Map<String, String> exitTranslations = {
-  'English': 'Exit',
-  'Hindi': 'बाहर निकलें',
-  'Marathi': 'बाहेर पडा',
-  'Gujarati': 'બહાર નીકળો',
-  'Spanish': 'Salir',
-  'Chinese (Simplified)': '退出',
-};
+  final Map<String, String> exitTranslations = {
+    'English': 'Exit',
+    'Hindi': 'बाहर निकलें',
+    'Marathi': 'बाहेर पडा',
+    'Gujarati': 'બહાર નીકળો',
+    'Spanish': 'Salir',
+    'Chinese (Simplified)': '退出',
+  };
 
-final Map<String, String> yesTranslations = {
-  'English': 'Yes',
-  'Hindi': 'हाँ',
-  'Marathi': 'होय',
-  'Gujarati': 'હા',
-  'Spanish': 'Sí',
-  'Chinese (Simplified)': '是',
-};
+  final Map<String, String> yesTranslations = {
+    'English': 'Yes',
+    'Hindi': 'हाँ',
+    'Marathi': 'होय',
+    'Gujarati': 'હા',
+    'Spanish': 'Sí',
+    'Chinese (Simplified)': '是',
+  };
 
+  String getYesText(String langCode) {
+    return yesTranslations[langCode] ?? 'Yes';
+  }
 
-String getYesText(String langCode) {
+  final Map<String, String> noTranslations = {
+    'English': 'No',
+    'Hindi': 'नहीं',
+    'Marathi': 'नाही',
+    'Gujarati': 'ના',
+    'Spanish': 'No',
+    'Chinese (Simplified)': '不',
+  };
 
-  return yesTranslations[langCode] ?? 'Yes';
-}
+  String getNoText(String langCode) {
+    return noTranslations[langCode] ?? 'No';
+  }
 
-final Map<String, String> noTranslations = {
-  'English': 'No',
-  'Hindi': 'नहीं',
-  'Marathi': 'नाही',
-  'Gujarati': 'ના',
-  'Spanish': 'No',
-  'Chinese (Simplified)': '不',
-};
-String getNoText(String langCode) {
+  String getExitText(String langCode) {
+    return exitTranslations[langCode] ?? 'Exit';
+  }
 
-  return noTranslations[langCode] ?? 'No';
-}
-String getExitText(String langCode) {
+  final Map<String, String> exitSessionMessages = {
+    'English': 'Are you sure you want to exit the session?',
+    'Hindi': 'क्या आप वाकई सत्र से बाहर निकलना चाहते हैं?',
+    'Marathi': 'आपली खात्री आहे की आपण सत्रातून बाहेर पडू इच्छिता?',
+    'Gujarati': 'શું તમે ખરેખર સત્રમાંથી બહાર નીકળવા માંગો છો?',
+    'Spanish': '¿Estás seguro de que quieres salir de la sesión?',
+    'Chinese (Simplified)': '您确定要退出会话吗？',
+  };
 
-  return exitTranslations[langCode] ?? 'Exit';
-}
-final Map<String, String> exitSessionMessages = {
-  'English': 'Are you sure you want to exit the session?',
-  'Hindi': 'क्या आप वाकई सत्र से बाहर निकलना चाहते हैं?',
-  'Marathi': 'आपली खात्री आहे की आपण सत्रातून बाहेर पडू इच्छिता?',
-  'Gujarati': 'શું તમે ખરેખર સત્રમાંથી બહાર નીકળવા માંગો છો?',
-  'Spanish': '¿Estás seguro de que quieres salir de la sesión?',
-  'Chinese (Simplified)': '您确定要退出会话吗？',
-};
-String getExitSessionText(String langCode) {
+  String getExitSessionText(String langCode) {
+    return exitSessionMessages[langCode] ??
+        'Are you sure you want to exit the session?';
+  }
 
-  return exitSessionMessages[langCode] ?? 'Are you sure you want to exit the session?';
-}
   Future<void> _startRecording() async {
     setState(() {
       _isRecording = true;
@@ -236,7 +241,6 @@ String getExitSessionText(String langCode) {
         //  detectLanguage(widget.speechdata!);
         final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
         setState(() {
-     
           messages.add(ChatMessage(
             message: widget.speechdata!,
             path: "",
@@ -257,17 +261,17 @@ String getExitSessionText(String langCode) {
 
         print("API INIT");
         if (widget.file != null) {
-          uploadAudioFile1(
-              widget.file!, widget.speechdata!, widget.speechdata!,widget.transcriptionData!);
+          uploadAudioFile1(widget.file!, widget.speechdata!, widget.speechdata!,
+              widget.transcriptionData!);
         } else {
-          uploadAudioFile1(null, widget.speechdata!, widget.speechdata!,widget.transcriptionData!);
+          uploadAudioFile1(null, widget.speechdata!, widget.speechdata!,
+              widget.transcriptionData!);
         }
 
         widget.selectedIndex = 1;
       }
     });
   }
-
 
   Future<void> uploadQuestionAudioFile(
       File? file, String language, String text) async {
@@ -282,15 +286,15 @@ String getExitSessionText(String langCode) {
       _cancelToken = CancelToken();
 
       final String uri =
-   //   "https://newchatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate";
-         "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate";
+          //   "https://newchatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate";
+          "https://chatbotapi.ortdemo.com/api/apiapp/question_speech_to_text_translate";
 
       FormData formData = FormData.fromMap({
         'text_prompt': text,
-        'language_name_text':"",
+        'language_name_text': "",
         //  GlobalLists.languageDetected,
         'session_id': GlobalLists.sessionID,
-        "bhashini":GlobalLists.isbhashini
+        "bhashini": GlobalLists.isbhashini
       });
 
       if (file != null) {
@@ -326,9 +330,9 @@ String getExitSessionText(String langCode) {
         final String languageName = jsonResponse['language_name'];
         final String changeQuestion = jsonResponse['button_question'];
         final String languageDetected = jsonResponse['detected_lang'];
-        final String transcriptionData= jsonResponse['transcription'];
+        final String transcriptionData = jsonResponse['transcription'];
         GlobalLists.sessionID = jsonResponse['session_id'];
-        GlobalLists.languageDetected= jsonResponse['detected_lang'];
+        GlobalLists.languageDetected = jsonResponse['detected_lang'];
         GlobalLists.isButtonVisible = jsonResponse['buttons'].toString();
         if (GlobalLists.isButtonVisible == "false") {
           //1july
@@ -367,7 +371,8 @@ String getExitSessionText(String langCode) {
                 });
               }
 
-              await uploadAudioFile1(file, question, question,transcriptionData);
+              await uploadAudioFile1(
+                  file, question, question, transcriptionData);
             },
             onNoPressed: () {
               print("❌ No clicked!");
@@ -384,7 +389,7 @@ String getExitSessionText(String langCode) {
                   );
                 }
               });
-              uploadAudioFile1(file, question, question,transcriptionData);
+              uploadAudioFile1(file, question, question, transcriptionData);
             },
           ));
         });
@@ -419,7 +424,7 @@ String getExitSessionText(String langCode) {
                 if (lastIndex != -1) {
                   setState(() {
                     messages[lastIndex] = ChatMessage(
-                      path:messages[lastIndex].path,
+                      path: messages[lastIndex].path,
                       message: messages[lastIndex].message,
                       isUser: false,
                       time: messages[lastIndex].time,
@@ -428,7 +433,8 @@ String getExitSessionText(String langCode) {
                   });
                 }
 
-                await uploadAudioFile1(file, question, question,transcriptionData);
+                await uploadAudioFile1(
+                    file, question, question, transcriptionData);
               },
               onNoPressed: () {
                 print("❌ No clicked!");
@@ -437,7 +443,6 @@ String getExitSessionText(String langCode) {
                   final lastIndex = messages.lastIndexWhere((m) => !m.isUser);
                   if (lastIndex != -1) {
                     messages[lastIndex] = ChatMessage(
-
                       path: "",
                       message: messages[lastIndex].message,
                       isUser: false,
@@ -446,7 +451,7 @@ String getExitSessionText(String langCode) {
                     );
                   }
                 });
-                uploadAudioFile1(file, question, question,transcriptionData);
+                uploadAudioFile1(file, question, question, transcriptionData);
               },
             ));
           });
@@ -455,7 +460,7 @@ String getExitSessionText(String langCode) {
           _scrollToBottom();
           dismissKeyboard();
         } else {
-          uploadAudioFile1(file, question, question,transcriptionData);
+          uploadAudioFile1(file, question, question, transcriptionData);
         }
 
         print('✅ Success: $jsonResponse');
@@ -495,14 +500,14 @@ String getExitSessionText(String langCode) {
     super.dispose();
   }
 
-
   final ScrollController _scrollController = ScrollController();
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       flutterTts.stop(); // Stop TTS when app goes to background
-       if (_audioPlayer != null && _audioPlayer!.playing) {
+      if (_audioPlayer != null && _audioPlayer!.playing) {
         _audioPlayer!.stop();
       }
     }
@@ -578,6 +583,32 @@ String getExitSessionText(String langCode) {
                       showButtons: msg.showButtons,
                       onYesPressed: msg.onYesPressed,
                       onNoPressed: msg.onNoPressed,
+                      onLongPressed: (){
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            // title: Text("Copy Text"),
+                            // content: Text("Do you want to copy this text?\n\n${msg.message}"),
+                            content: Text("Do you want to copy this text to clipboard", style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold),),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Clipboard.setData(ClipboardData(text: msg.message));
+                                  Navigator.of(context).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("Copied to clipboard!")),
+                                  );
+                                },
+                                child: Text("Copy"),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text("Cancel"),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                     );
                   },
                 ),
@@ -648,8 +679,6 @@ String getExitSessionText(String langCode) {
                   ),
                 ),
 
-           
-
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -675,17 +704,15 @@ String getExitSessionText(String langCode) {
                           maxLines: 1,
                           focusNode: _focusNode,
                           style: TextStyle(fontSize: 14),
-                          decoration:  InputDecoration.collapsed(
-                              hintText: 
-                              getWriteHintText(GlobalLists.languageDetected)
+                          decoration: InputDecoration.collapsed(
+                              hintText:
+                                  getWriteHintText(GlobalLists.languageDetected)
                               // "Write anything here..."
                               ),
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 8),
-
                     Column(
                       children: [
                         if (!isLoading)
@@ -721,9 +748,9 @@ String getExitSessionText(String langCode) {
                       GestureDetector(
                         onTap: () async {
                           await flutterTts.stop();
-                           if (_audioPlayer != null && _audioPlayer!.playing) {
-        _audioPlayer!.stop();
-      }
+                          if (_audioPlayer != null && _audioPlayer!.playing) {
+                            _audioPlayer!.stop();
+                          }
                           final text = _controller.text.trim();
                           if (text.isNotEmpty) {
                             // detectLanguage(text);
@@ -738,7 +765,6 @@ String getExitSessionText(String langCode) {
                         child: SvgPicture.asset("assets/images/send.svg",
                             width: 30, height: 30, color: Color(0xff2b3e2b)),
                       ),
-                  
                   ],
                 ),
               ),
@@ -750,99 +776,105 @@ String getExitSessionText(String langCode) {
   }
 
   Widget chatBubble(
-    String message,String path, {
+    String message,
+    String path, {
     required bool isUser,
     required String time,
     String showButtons = "false",
     VoidCallback? onYesPressed, // Optional callback for Yes
     VoidCallback? onNoPressed, // Optional callback for No
+    VoidCallback? onLongPressed, // Optional callback for No
   }) {
     return Column(
       crossAxisAlignment:
           isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment:
-              isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-          children: [
-            Flexible(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isUser ? Color(0xffE3D9B5) : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    isUser
-                        ? SvgPicture.asset("assets/images/user.svg",
-                            width: 20, height: 20, color: Color(0xff2b3e2b))
-                        : SvgPicture.asset("assets/images/bot.svg",
-                            width: 20, height: 20, color: Color(0xff2b3e2b)),
-                    const SizedBox(height: 4),
-                    Text(message),
-                    if (showButtons == "true" && !isUser) ...[
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ElevatedButton(
-                            onPressed: onYesPressed ??
-                                () {
-                                  print("Default Yes pressed");
-                                },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xff2b3e2b),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 4),
-                              textStyle: const TextStyle(fontSize: 12),
+        GestureDetector(
+          child: Row(
+            mainAxisAlignment:
+                isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            children: [
+              Flexible(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isUser ? Color(0xffE3D9B5) : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      isUser
+                          ? SvgPicture.asset("assets/images/user.svg",
+                              width: 20, height: 20, color: Color(0xff2b3e2b))
+                          : SvgPicture.asset("assets/images/bot.svg",
+                              width: 20, height: 20, color: Color(0xff2b3e2b)),
+                      const SizedBox(height: 4),
+                      Text(message),
+                      if (showButtons == "true" && !isUser) ...[
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            ElevatedButton(
+                              onPressed: onYesPressed ??
+                                  () {
+                                    print("Default Yes pressed");
+                                  },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xff2b3e2b),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
+                                textStyle: const TextStyle(fontSize: 12),
+                              ),
+                              child: const Text("Yes"),
                             ),
-                            child: const Text("Yes"),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: onNoPressed ??
-                                () {
-                                  print("Default No pressed");
-                                },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 4),
-                              textStyle: const TextStyle(fontSize: 12),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: onNoPressed ??
+                                  () {
+                                    print("Default No pressed");
+                                  },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
+                                textStyle: const TextStyle(fontSize: 12),
+                              ),
+                              child: const Text("No"),
                             ),
-                            child: const Text("No"),
-                          ),
-                        ],
-                      )
-                    ]
-                  ],
+                          ],
+                        )
+                      ]
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            if (!isUser)
-//         
-              GestureDetector(
-                onTap: () async {
-                  _stopListening();
-                  await flutterTts.stop();
-                   if (_audioPlayer != null && _audioPlayer!.playing) {
-        _audioPlayer!.stop();
-      }
-      print("volume");
-      print(path);
-                  speakmessage(path, routeGlobalKey.currentContext!);
-                },
-                child: SvgPicture.asset("assets/images/volume.svg",
-                    width: 20, height: 20, color: Color(0xff2b3e2b)),
-              )
-          ],
+              const SizedBox(width: 10),
+              if (!isUser)
+          //
+                GestureDetector(
+                  onTap: () async {
+                    _stopListening();
+                    await flutterTts.stop();
+                    if (_audioPlayer != null && _audioPlayer!.playing) {
+                      _audioPlayer!.stop();
+                    }
+                    print("volume");
+                    print(path);
+                    speakmessage(path, routeGlobalKey.currentContext!);
+                  },
+                  child: SvgPicture.asset("assets/images/volume.svg",
+                      width: 20, height: 20, color: Color(0xff2b3e2b)),
+                )
+            ],
+          ),
+          onLongPress: onLongPressed
         ),
+
         //  Padding(
         //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
         //   child: Text(path,
@@ -896,6 +928,7 @@ String getExitSessionText(String langCode) {
   }
 
   final AudioPlayer _audioPlayer = AudioPlayer();
+
   Future<void> configureAudioSession() async {
     final session = await AudioSession.instance;
     await session.configure(AudioSessionConfiguration.music());
@@ -940,15 +973,15 @@ String getExitSessionText(String langCode) {
 
   Future<void> _getOutOfApp() async {
     await flutterTts.stop();
-     if (_audioPlayer != null && _audioPlayer!.playing) {
-        _audioPlayer!.stop();
-      }
+    if (_audioPlayer != null && _audioPlayer!.playing) {
+      _audioPlayer!.stop();
+    }
     Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: 500),
         pageBuilder: (context, animation, secondaryAnimation) =>
-             SpeechRecordScreen(),
-          //OnboardingScreenUI(),
+            SpeechRecordScreen(),
+        //OnboardingScreenUI(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           final opacity = animation.drive(
             Tween<double>(begin: 0.0, end: 1.0).chain(
@@ -970,14 +1003,12 @@ String getExitSessionText(String langCode) {
     showDialog(
       context: routeGlobalKey.currentContext!,
       builder: (context) => AlertDialog(
-        title: Text(
-          getExitText(GlobalLists.languageDetected)
-          // 'Exit'
-          ),
-        content: Text(
-          getExitSessionText(GlobalLists.languageDetected)
-          // 'Are you sure you want to exit these session?'
-          ),
+        title: Text(getExitText(GlobalLists.languageDetected)
+            // 'Exit'
+            ),
+        content: Text(getExitSessionText(GlobalLists.languageDetected)
+            // 'Are you sure you want to exit these session?'
+            ),
         actions: [
           TextButton(
             onPressed: () {
@@ -1008,9 +1039,9 @@ String getExitSessionText(String langCode) {
 
   Future<void> _startListening() async {
     flutterTts.stop();
-     if (_audioPlayer != null && _audioPlayer!.playing) {
-        _audioPlayer!.stop();
-      }
+    if (_audioPlayer != null && _audioPlayer!.playing) {
+      _audioPlayer!.stop();
+    }
     if (!_isRecording) {
       if (Platform.isAndroid) {
         final dir = await getApplicationDocumentsDirectory();
@@ -1021,7 +1052,7 @@ String getExitSessionText(String langCode) {
           toFile: _audioFilePath,
           codec: Codec.aacMP4,
           sampleRate: 44100,
-           bitRate: 128000,
+          bitRate: 128000,
         );
       } else {
         final dir = await getApplicationDocumentsDirectory();
@@ -1032,7 +1063,6 @@ String getExitSessionText(String langCode) {
           toFile: _audioFilePath,
           codec: Codec.pcm16WAV, // ✅ WAV format
           sampleRate: 44100,
-          
         );
         // final dir = await getApplicationDocumentsDirectory();
         // _audioFilePath =
@@ -1118,8 +1148,8 @@ String getExitSessionText(String langCode) {
     }
   }
 
-  Future<void> uploadAudioFile1(
-      File? file, String text, String detectedText,String transcriptionData) async {
+  Future<void> uploadAudioFile1(File? file, String text, String detectedText,
+      String transcriptionData) async {
     print("API RUCHITA");
     print("API INIT");
     print("RUCHITA 6 ${GlobalLists.languageDetected}");
@@ -1132,14 +1162,13 @@ String getExitSessionText(String langCode) {
       });
 
       final uri =
-    //  "https://newchatbotapi.ortdemo.com/api/apiapp/speech_to_text_translate";
-         "https://chatbotapi.ortdemo.com/api/apiapp/new_speech_to_text_translate";
+          //  "https://newchatbotapi.ortdemo.com/api/apiapp/speech_to_text_translate";
+          "https://chatbotapi.ortdemo.com/api/apiapp/new_speech_to_text_translate";
 
       FormData formData = FormData.fromMap({
         // 'text_prompt': text == "" ? detectedText : text,
-        'text_prompt':transcriptionData,
-        'language_code': 
-         GlobalLists.languageDetected,
+        'text_prompt': transcriptionData,
+        'language_code': GlobalLists.languageDetected,
         'device_id': GlobalLists.deviceID,
         'device_name': GlobalLists.model,
         'session_id': GlobalLists.sessionID,
@@ -1180,14 +1209,14 @@ String getExitSessionText(String langCode) {
 
         final String question = jsonResponse['question'];
         final String content = jsonResponse['content'];
-final String path = jsonResponse['path'];
+        final String path = jsonResponse['path'];
         final String languageName = jsonResponse['check_lanuage_response']
                 ?['data']?[0]?['single_language']?[0]?['languageName'] ??
             '';
         _detectedLang = jsonResponse['check_lanuage_response']?['data']?[0]
                 ?['single_language']?[0]?['language'] ??
             '';
-       
+
         print("🟢 Question _detectedLang: $_detectedLang");
         print("🟢 Question: $question");
         print("🟢 Question: Localpath");
@@ -1275,6 +1304,7 @@ final String path = jsonResponse['path'];
       return null;
     }
   }
+
   // void _startListening() async {
   //   await _speechToText.listen(
   //     onResult: _onSpeechResult,
@@ -1364,7 +1394,7 @@ final String path = jsonResponse['path'];
 
 class ChatMessage {
   final String message;
-   final String path;
+  final String path;
   final bool isUser;
   final String time;
   final String showButtons;
@@ -1373,7 +1403,7 @@ class ChatMessage {
 
   ChatMessage({
     required this.message,
-     required this.path,
+    required this.path,
     required this.isUser,
     required this.time,
     this.showButtons = "false",
