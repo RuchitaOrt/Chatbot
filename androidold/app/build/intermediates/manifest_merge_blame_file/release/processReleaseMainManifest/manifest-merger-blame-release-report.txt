@@ -1,0 +1,221 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.chat_bot"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+11-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:5:5-71
+11-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:5:22-68
+12    <uses-permission android:name="android.permission.INTERNET" />
+12-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:6:5-67
+12-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:6:22-64
+13    <uses-permission android:name="android.permission.VIBRATE" />
+13-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:7:5-66
+13-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:7:22-63
+14    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+14-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:8:5-81
+14-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:8:22-78
+15    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+15-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:9:5-80
+15-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:9:22-77
+16    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+16-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:11:5-111
+16-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:11:22-79
+17    <!--
+18         Required to query activities that can process text, see:
+19         https://developer.android.com/training/package-visibility and
+20         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+21
+22         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin.
+23    -->
+24    <queries>
+24-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:52:5-57:15
+25        <intent>
+25-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:53:9-56:18
+26            <action android:name="android.intent.action.PROCESS_TEXT" />
+26-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:54:13-73
+26-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:54:21-70
+27
+28            <data android:mimeType="text/plain" />
+28-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:55:13-51
+28-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:55:19-48
+29        </intent>
+30    </queries>
+31
+32    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+32-->[:connectivity_plus] /Users/macbook/.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/android/build/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:7:5-79
+32-->[:connectivity_plus] /Users/macbook/.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/android/build/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:7:22-76
+33    <uses-permission android:name="android.permission.BLUETOOTH" />
+33-->[com.github.canardoux:flutter_sound_core:9.28.0] /Users/macbook/.gradle/caches/transforms-3/f60b5325ab816a17a2f2ee9a118fc2a4/transformed/jetified-flutter_sound_core-9.28.0/AndroidManifest.xml:7:5-68
+33-->[com.github.canardoux:flutter_sound_core:9.28.0] /Users/macbook/.gradle/caches/transforms-3/f60b5325ab816a17a2f2ee9a118fc2a4/transformed/jetified-flutter_sound_core-9.28.0/AndroidManifest.xml:7:22-65
+34    <uses-permission android:name="android.permission.WAKE_LOCK" />
+34-->[com.github.canardoux:flutter_sound_core:9.28.0] /Users/macbook/.gradle/caches/transforms-3/f60b5325ab816a17a2f2ee9a118fc2a4/transformed/jetified-flutter_sound_core-9.28.0/AndroidManifest.xml:8:5-68
+34-->[com.github.canardoux:flutter_sound_core:9.28.0] /Users/macbook/.gradle/caches/transforms-3/f60b5325ab816a17a2f2ee9a118fc2a4/transformed/jetified-flutter_sound_core-9.28.0/AndroidManifest.xml:8:22-65
+35    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+35-->[com.github.canardoux:flutter_sound_core:9.28.0] /Users/macbook/.gradle/caches/transforms-3/f60b5325ab816a17a2f2ee9a118fc2a4/transformed/jetified-flutter_sound_core-9.28.0/AndroidManifest.xml:9:5-80
+35-->[com.github.canardoux:flutter_sound_core:9.28.0] /Users/macbook/.gradle/caches/transforms-3/f60b5325ab816a17a2f2ee9a118fc2a4/transformed/jetified-flutter_sound_core-9.28.0/AndroidManifest.xml:9:22-77
+36    <uses-permission android:name="Manifest.permission.CAPTURE_AUDIO_OUTPUT" />
+36-->[com.github.canardoux:flutter_sound_core:9.28.0] /Users/macbook/.gradle/caches/transforms-3/f60b5325ab816a17a2f2ee9a118fc2a4/transformed/jetified-flutter_sound_core-9.28.0/AndroidManifest.xml:11:5-80
+36-->[com.github.canardoux:flutter_sound_core:9.28.0] /Users/macbook/.gradle/caches/transforms-3/f60b5325ab816a17a2f2ee9a118fc2a4/transformed/jetified-flutter_sound_core-9.28.0/AndroidManifest.xml:11:22-77
+37
+38    <permission
+38-->[androidx.core:core:1.13.1] /Users/macbook/.gradle/caches/transforms-3/d6a27c9e57e22a8e4c10016cbcc734d2/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
+39        android:name="com.example.chat_bot.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+39-->[androidx.core:core:1.13.1] /Users/macbook/.gradle/caches/transforms-3/d6a27c9e57e22a8e4c10016cbcc734d2/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
+40        android:protectionLevel="signature" />
+40-->[androidx.core:core:1.13.1] /Users/macbook/.gradle/caches/transforms-3/d6a27c9e57e22a8e4c10016cbcc734d2/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
+41
+42    <uses-permission android:name="com.example.chat_bot.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+42-->[androidx.core:core:1.13.1] /Users/macbook/.gradle/caches/transforms-3/d6a27c9e57e22a8e4c10016cbcc734d2/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
+42-->[androidx.core:core:1.13.1] /Users/macbook/.gradle/caches/transforms-3/d6a27c9e57e22a8e4c10016cbcc734d2/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
+43
+44    <application
+45        android:name="android.app.Application"
+45-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:14:9-42
+46        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+46-->[androidx.core:core:1.13.1] /Users/macbook/.gradle/caches/transforms-3/d6a27c9e57e22a8e4c10016cbcc734d2/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
+47        android:enableOnBackInvokedCallback="true"
+47-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:15:9-51
+48        android:extractNativeLibs="false"
+49        android:hardwareAccelerated="true"
+49-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:16:9-43
+50        android:icon="@mipmap/sita_launcher"
+50-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:18:9-45
+51        android:label="SITA AI"
+51-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:19:9-32
+52        android:usesCleartextTraffic="true" >
+52-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:17:10-45
+53        <activity
+53-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:20:9-40:20
+54            android:name="com.example.chat_bot.MainActivity"
+54-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:21:13-41
+55            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+55-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:22:13-163
+56            android:exported="true"
+56-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:23:13-36
+57            android:hardwareAccelerated="true"
+57-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:24:13-47
+58            android:launchMode="singleTop"
+58-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:25:13-43
+59            android:taskAffinity=""
+59-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:26:13-36
+60            android:theme="@style/LaunchTheme"
+60-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:27:13-47
+61            android:windowSoftInputMode="adjustResize" >
+61-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:28:13-55
+62
+63            <!--
+64                 Specifies an Android theme to apply to this Activity as soon as
+65                 the Android process has started. This theme is visible to the user
+66                 while the Flutter UI initializes. After that, this theme continues
+67                 to determine the Window background behind the Flutter UI.
+68            -->
+69            <meta-data
+69-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:33:13-35:57
+70                android:name="io.flutter.embedding.android.NormalTheme"
+70-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:34:17-72
+71                android:resource="@style/NormalTheme" />
+71-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:35:17-54
+72
+73            <intent-filter>
+73-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:36:13-39:29
+74                <action android:name="android.intent.action.MAIN" />
+74-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:37:17-69
+74-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:37:25-66
+75
+76                <category android:name="android.intent.category.LAUNCHER" />
+76-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:38:17-77
+76-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:38:27-74
+77            </intent-filter>
+78        </activity>
+79        <!--
+80             Don't delete the meta-data below.
+81             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java
+82        -->
+83        <meta-data
+83-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:43:9-45:33
+84            android:name="flutterEmbedding"
+84-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:44:13-44
+85            android:value="2" />
+85-->/Users/macbook/Documents/flutter_projects/chat_bot/android/app/src/main/AndroidManifest.xml:45:13-30
+86
+87        <uses-library
+87-->[androidx.window:window:1.2.0] /Users/macbook/.gradle/caches/transforms-3/a434597d5f2fadda9a7ac63f83aaf65a/transformed/jetified-window-1.2.0/AndroidManifest.xml:23:9-25:40
+88            android:name="androidx.window.extensions"
+88-->[androidx.window:window:1.2.0] /Users/macbook/.gradle/caches/transforms-3/a434597d5f2fadda9a7ac63f83aaf65a/transformed/jetified-window-1.2.0/AndroidManifest.xml:24:13-54
+89            android:required="false" />
+89-->[androidx.window:window:1.2.0] /Users/macbook/.gradle/caches/transforms-3/a434597d5f2fadda9a7ac63f83aaf65a/transformed/jetified-window-1.2.0/AndroidManifest.xml:25:13-37
+90        <uses-library
+90-->[androidx.window:window:1.2.0] /Users/macbook/.gradle/caches/transforms-3/a434597d5f2fadda9a7ac63f83aaf65a/transformed/jetified-window-1.2.0/AndroidManifest.xml:26:9-28:40
+91            android:name="androidx.window.sidecar"
+91-->[androidx.window:window:1.2.0] /Users/macbook/.gradle/caches/transforms-3/a434597d5f2fadda9a7ac63f83aaf65a/transformed/jetified-window-1.2.0/AndroidManifest.xml:27:13-51
+92            android:required="false" />
+92-->[androidx.window:window:1.2.0] /Users/macbook/.gradle/caches/transforms-3/a434597d5f2fadda9a7ac63f83aaf65a/transformed/jetified-window-1.2.0/AndroidManifest.xml:28:13-37
+93
+94        <provider
+94-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/macbook/.gradle/caches/transforms-3/dd15081f0a2a9d9f966235b4921d6b3d/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:24:9-32:20
+95            android:name="androidx.startup.InitializationProvider"
+95-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/macbook/.gradle/caches/transforms-3/dd15081f0a2a9d9f966235b4921d6b3d/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:25:13-67
+96            android:authorities="com.example.chat_bot.androidx-startup"
+96-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/macbook/.gradle/caches/transforms-3/dd15081f0a2a9d9f966235b4921d6b3d/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:26:13-68
+97            android:exported="false" >
+97-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/macbook/.gradle/caches/transforms-3/dd15081f0a2a9d9f966235b4921d6b3d/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:27:13-37
+98            <meta-data
+98-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/macbook/.gradle/caches/transforms-3/dd15081f0a2a9d9f966235b4921d6b3d/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:29:13-31:52
+99                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+99-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/macbook/.gradle/caches/transforms-3/dd15081f0a2a9d9f966235b4921d6b3d/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:30:17-78
+100                android:value="androidx.startup" />
+100-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/macbook/.gradle/caches/transforms-3/dd15081f0a2a9d9f966235b4921d6b3d/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:31:17-49
+101            <meta-data
+101-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+102                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+102-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+103                android:value="androidx.startup" />
+103-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+104        </provider>
+105
+106        <receiver
+106-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+107            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+107-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+108            android:directBootAware="false"
+108-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+109            android:enabled="true"
+109-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+110            android:exported="true"
+110-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+111            android:permission="android.permission.DUMP" >
+111-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+112            <intent-filter>
+112-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+113                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+113-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+113-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+114            </intent-filter>
+115            <intent-filter>
+115-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+116                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+116-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+116-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+117            </intent-filter>
+118            <intent-filter>
+118-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+119                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+119-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+119-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+120            </intent-filter>
+121            <intent-filter>
+121-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+122                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+122-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+122-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/macbook/.gradle/caches/transforms-3/b4dd49bf4da98f3e8c7ab2c3d3120e48/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+123            </intent-filter>
+124        </receiver>
+125    </application>
+126
+127</manifest>

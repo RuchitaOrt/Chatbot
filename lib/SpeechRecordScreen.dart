@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:chat_bot/ChatSessionListPage.dart';
 import 'package:chat_bot/GlobalList.dart';
 import 'package:chat_bot/OnboardingScreenUI.dart';
+import 'package:chat_bot/Service/InterviewApiService.dart';
 import 'package:chat_bot/chatbot.dart';
 import 'package:chat_bot/main.dart';
 import 'package:chat_bot/sizeConfig.dart';
@@ -526,6 +527,8 @@ String getHoldMicText(String langCode, bool isRecording) {
  
   return holdMicTranslations[langCode] ?? 'Hold the microphone to speak.';
 }
+
+
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     return WillPopScope(
@@ -541,6 +544,83 @@ String getHoldMicText(String langCode, bool isRecording) {
         appBar: AppBar(
           backgroundColor: const Color(0xffF9F7F0),
           automaticallyImplyLeading: false,
+                      actions: [
+//                         Container(
+//   padding: EdgeInsets.all(2),
+//   decoration: BoxDecoration(
+//     color: Colors.grey.shade300,
+//     borderRadius: BorderRadius.circular(20),
+//   ),
+//   child: Row(
+//     mainAxisSize: MainAxisSize.min,
+//     children: [
+//       GestureDetector(
+//         onTap: () {
+//           setState(() => GlobalLists.isEnglishResponse = false);
+//         },
+//         child: Container(
+//           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+//           decoration: BoxDecoration(
+//             color: !GlobalLists.isEnglishResponse ? Color(0xff2B3E2B) : Colors.transparent,
+//             borderRadius: BorderRadius.circular(20),
+//           ),
+//           child: Text(
+//             "Regional",
+//             style: TextStyle(
+//               color: !GlobalLists.isEnglishResponse ? Colors.white : Colors.black,
+//               fontSize: 11,
+//             ),
+//           ),
+//         ),
+//       ),
+//       GestureDetector(
+//         onTap: () {
+//           setState(() => GlobalLists.isEnglishResponse = true);
+//         },
+//         child: Container(
+//           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+//           decoration: BoxDecoration(
+//             color: GlobalLists.isEnglishResponse ? Color(0xff2B3E2B) : Colors.transparent,
+//             borderRadius: BorderRadius.circular(20),
+//           ),
+//           child: Text(
+//             "English",
+//             style: TextStyle(
+//               color: GlobalLists.isEnglishResponse ? Colors.white : Colors.black,
+//               fontSize: 11,
+//             ),
+//           ),
+//         ),
+//       ),
+//     ],
+//   ),
+// ),
+  // Row(
+  //   children: [
+  //     Text(
+  //       isEnglishResponse ? "English" : "Regional",
+  //       style: TextStyle(
+  //         color: Color(0xff2b3e2b),
+  //         fontSize: 12,
+  //         fontWeight: FontWeight.w500,
+  //       ),
+  //     ),
+  //     Transform.scale(
+  //     scale: 0.7, // 🔥 reduce size (0.6 - 0.8 looks good)
+  //     child: Switch(
+  //       value: isEnglishResponse,
+  //       activeColor: Color(0xff2B3E2B),
+  //       onChanged: (value) {
+  //         setState(() {
+  //           isEnglishResponse = value;
+  //         });
+  //       },
+  //     ),
+  //   ),
+  //   ],
+  // ),
+  SizedBox(width: 8),
+],
           title: Row(
             children: [
               Image.asset(
@@ -616,41 +696,65 @@ String getHoldMicText(String langCode, bool isRecording) {
                   ),
                 ),
                 SizedBox(height: SizeConfig.blockSizeVertical * 2),
-                if (!isLoading)
-                  GestureDetector(
-                    onLongPressStart: (_) => _startListening(),
-                    onLongPressEnd: (_) => _stopListening(),
-                    child: Lottie.asset(
-                      'assets/images/speech_anim.json',
-                      height: SizeConfig.blockSizeVertical * 12,
-                      width: SizeConfig.blockSizeVertical * 12,
-                      animate: _isRecording,
-                    ),
-                  ),
-                if (isLoading)
-                  Center(
-                    child: SizedBox(
-                      width: SizeConfig.blockSizeHorizontal * 20,
-                      height: SizeConfig.blockSizeHorizontal * 20,
-                      child: const CircularProgressIndicator(
-                        color: Color(0xff2B3E2B),
-                        strokeWidth: 8,
-                      ),
-                    ),
-                  ),
-                SizedBox(height: SizeConfig.blockSizeVertical * 2),
-                Text(
-                  getHoldMicText(GlobalLists.languageDetected,_isRecording),
-                  // _isRecording
-                  //     ? "Release to stop"
-                  //     : "Hold the microphone to speak",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: SizeConfig.blockSizeHorizontal * 4,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                textfunction()
+               Container(
+  width: SizeConfig.blockSizeHorizontal * 100,
+  child: Align(
+    alignment: Alignment.center, // or centerLeft / centerRight
+    child: ElevatedButton(
+      onPressed: () {
+        print("Default Start  pressed");
+        setState(() {
+    isQuestionLoading = true;
+  });
+        fetchQuestion();
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color(0xff2b3e2b),
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        textStyle: TextStyle(fontSize: 14),
+      ),
+      child:isQuestionLoading
+        ? CircularProgressIndicator(color: Colors.white,)
+        : Text("Start Test Or Interview"),
+    ),
+  ),
+)
+                // if (!isLoading)
+                //   GestureDetector(
+                //     onLongPressStart: (_) => _startListening(),
+                //     onLongPressEnd: (_) => _stopListening(),
+                //     child: Lottie.asset(
+                //       'assets/images/speech_anim.json',
+                //       height: SizeConfig.blockSizeVertical * 12,
+                //       width: SizeConfig.blockSizeVertical * 12,
+                //       animate: _isRecording,
+                //     ),
+                //   ),
+                // if (isLoading)
+                //   Center(
+                //     child: SizedBox(
+                //       width: SizeConfig.blockSizeHorizontal * 20,
+                //       height: SizeConfig.blockSizeHorizontal * 20,
+                //       child: const CircularProgressIndicator(
+                //         color: Color(0xff2B3E2B),
+                //         strokeWidth: 8,
+                //       ),
+                //     ),
+                //   ),
+                // SizedBox(height: SizeConfig.blockSizeVertical * 2),
+                // Text(
+                //   getHoldMicText(GlobalLists.languageDetected,_isRecording),
+                //   // _isRecording
+                //   //     ? "Release to stop"
+                //   //     : "Hold the microphone to speak",
+                //   textAlign: TextAlign.center,
+                //   style: TextStyle(
+                //     fontSize: SizeConfig.blockSizeHorizontal * 4,
+                //     fontWeight: FontWeight.w500,
+                //   ),
+                // ),
+                // textfunction()
               ],
             ),
           ),
@@ -737,7 +841,36 @@ String getHoldMicText(String langCode, bool isRecording) {
       ],
     );
   }
+  bool isQuestionLoading = false;
+void fetchQuestion() async {
+  
+  final result = await InterviewApiService.getQuestion();
+setState(() {
+    isQuestionLoading = false;
+  });
 
+  if (result != null) {
+    print("Session ID: ${result.sessionId}");
+    print("Question: ${result.question}");
+     Navigator.of(routeGlobalKey.currentContext!).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => Chatbot(
+                selectedIndex: 2,
+                speechdata: result.question,
+                replydata: "",
+                languageName: "",
+                 transcriptionData:  "",
+                 sessionID: result.sessionId,
+                 questionID: result.questionId.toString(),
+                 filePath: result.audio_path,
+              ),
+            ),
+            (Route route) => false,
+          );
+  } else {
+    print("Failed to fetch question");
+  }
+}
   bool isLoading = false;
 
   Future<void> uploadQuestionAudioFile(
@@ -765,6 +898,8 @@ String getHoldMicText(String langCode, bool isRecording) {
       // GlobalLists.languageDetected;
       request.fields['session_id'] = "";
        request.fields['bhashini']=GlobalLists.isbhashini;
+ request.fields['is_english']=GlobalLists.isEnglishResponse.toString();
+        
    
       print(text);
       print(request.fields);

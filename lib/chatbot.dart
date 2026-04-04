@@ -5,6 +5,9 @@ import 'package:audio_session/audio_session.dart';
 import 'package:chat_bot/APIService.dart';
 import 'package:chat_bot/GlobalList.dart';
 import 'package:chat_bot/OnboardingScreenUI.dart';
+import 'package:chat_bot/Service/InterviewAnswerApi.dart';
+import 'package:chat_bot/Service/InterviewApiService.dart';
+import 'package:chat_bot/Service/InterviewResultApi.dart';
 import 'package:chat_bot/SpeechRecordScreen.dart';
 import 'package:chat_bot/Speech_Page.dart';
 import 'package:chat_bot/main.dart';
@@ -16,7 +19,6 @@ import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -57,7 +59,10 @@ class Chatbot extends StatefulWidget {
       this.languageName,
       this.replydata,
       this.file,
-      this.transcriptionData});
+      this.transcriptionData,
+      this.sessionID,
+      this.questionID,
+      this.filePath});
 
   static const String route = "/chatBot";
   int selectedIndex = 0;
@@ -66,6 +71,9 @@ class Chatbot extends StatefulWidget {
   String? languageName = '';
   File? file;
   String? transcriptionData;
+  String? sessionID;
+  String? questionID;
+  String? filePath;
 
   @override
   State<Chatbot> createState() => _ChatbotState();
@@ -86,7 +94,9 @@ class _ChatbotState extends State<Chatbot>
 
   // final languageIdentifier = LanguageIdentifier(confidenceThreshold: 0.5);
   final translator = GoogleTranslator();
-
+Timer? _countdownTimer;
+int _timeLeft = 30;
+bool showTimer = false;
   // bool _isListening = false;
   // bool _hasSentSpeechResult = false;
   // String _recognizedSpeech = "";
@@ -190,29 +200,6 @@ class _ChatbotState extends State<Chatbot>
         'Are you sure you want to exit the session?';
   }
 
-  Future<void> _startRecording() async {
-    setState(() {
-      _isRecording = true;
-    });
-
-    // Your mic + speech logic
-    await _startListening();
-  }
-
-  Future<void> _stopRecording({bool cancelled = false}) async {
-    if (cancelled) {
-      print("🛑 Recording canceled");
-      // Delete temp file or reset state
-    } else {
-      print("✅ Recording saved");
-      // Handle upload or speech recognition
-    }
-
-    await _stopListening();
-    setState(() {
-      _isRecording = false;
-    });
-  }
 
   Future<void> _initPermissions() async {
     await Permission.microphone.request();
@@ -244,7 +231,7 @@ class _ChatbotState extends State<Chatbot>
           messages.add(ChatMessage(
             message: widget.speechdata!,
             path: "",
-            isUser: true,
+            isUser: false,
             time: '$time ${GlobalLists.languageDetected}',
             //1July
             // ${widget.languageName}',
@@ -256,23 +243,112 @@ class _ChatbotState extends State<Chatbot>
               print("❌ No clicked!");
             },
           ));
+         speakmessage(widget.filePath!, routeGlobalKey.currentContext!);
         });
         _scrollToBottom();
 
-        print("API INIT");
-        if (widget.file != null) {
-          uploadAudioFile1(widget.file!, widget.speechdata!, widget.speechdata!,
-              widget.transcriptionData!);
-        } else {
-          uploadAudioFile1(null, widget.speechdata!, widget.speechdata!,
-              widget.transcriptionData!);
-        }
-
+       
         widget.selectedIndex = 1;
+        if (widget.speechdata != null && widget.speechdata!.isNotEmpty) {
+    startTimer();
+  }
       }
     });
   }
+void startTimer() {
+  _countdownTimer?.cancel();
 
+  setState(() {
+    _timeLeft = 30;
+    showTimer = true;
+  });
+
+  _countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    if (_timeLeft > 0) {
+      setState(() {
+        _timeLeft--;
+      });
+    } else {
+      timer.cancel();
+
+      setState(() async {
+        showTimer = false;
+        final result = await InterviewApiService.getQuestion(sessionId: widget.sessionID!);
+          widget.questionID =result!.questionId.toString();
+         widget.speechdata=result.question.toString();
+        if(result!=null)
+        {
+                 if(result!.status==1)
+         {
+ final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+          messages.add(ChatMessage(
+            message: result.question,
+            path: "",
+            isUser: false,
+            time: '$time',
+            
+          ));
+            _scrollToBottom();
+
+       speakmessage(result.audio_path, routeGlobalKey.currentContext!);
+        widget.selectedIndex = 1;
+        if (widget.speechdata != null && widget.speechdata!.isNotEmpty) {
+    startTimer();
+  }
+        
+       
+
+        _scrollToBottom();
+         }
+          else{
+            print("CALL RESULT Here12");
+
+
+final resultResp = await InterviewResultApi.getResult(
+  sessionId: widget.sessionID!,
+);
+
+if (resultResp != null) {
+  print("Final %: ${resultResp.percentage}");
+  showResultDialog(routeGlobalKey.currentContext!,resultResp!.percentage);
+}
+          }
+  //          final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+  //       setState(() {
+  //         messages.add(ChatMessage(
+  //           message: widget.speechdata!,
+  //           path: "",
+  //           isUser: false,
+  //           time: '$time ${GlobalLists.languageDetected}',
+  //           //1July
+  //           // ${widget.languageName}',
+  //           showButtons: GlobalLists.isButtonVisible.toString(),
+  //           onYesPressed: () {
+  //             print("✅ Yes clicked!");
+  //           },
+  //           onNoPressed: () {
+  //             print("❌ No clicked!");
+  //           },
+  //         ));
+  //       });
+  //       // speakmessage(widget.speechdata!, routeGlobalKey.currentContext!);
+  //       _scrollToBottom();
+
+       
+  //       widget.selectedIndex = 1;
+  //       if (widget.speechdata != null && widget.speechdata!.isNotEmpty) {
+  //   startTimer();
+  // }
+        }
+      });
+
+      print("⏰ Time over → call API");
+
+      // 👉 NEXT STEP (we'll add later)
+      // call API again here if user didn't respond
+    }
+  });
+}
   Future<void> uploadQuestionAudioFile(
       File? file, String language, String text) async {
     try {
@@ -294,7 +370,8 @@ class _ChatbotState extends State<Chatbot>
         'language_name_text': "",
         //  GlobalLists.languageDetected,
         'session_id': GlobalLists.sessionID,
-        "bhashini": GlobalLists.isbhashini
+        "bhashini": GlobalLists.isbhashini,
+        "is_english":GlobalLists.isEnglishResponse
       });
 
       if (file != null) {
@@ -490,6 +567,7 @@ class _ChatbotState extends State<Chatbot>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+     _countdownTimer?.cancel();
     _controller.dispose();
     _focusNode.dispose(); // Clean up to avoid memory leaks
     _speechToText.stop();
@@ -549,7 +627,7 @@ class _ChatbotState extends State<Chatbot>
                   height: 45,
                   width: 45,
                 ),
-                Text("AI Bot",
+                Text("TEST Bot",
                     style: TextStyle(
                         color: Color(0xff2b3e2b), fontWeight: FontWeight.bold)),
                 GestureDetector(
@@ -562,6 +640,7 @@ class _ChatbotState extends State<Chatbot>
                 )
               ],
             ),
+
             // centerTitle: true,
           ),
           body: Column(
@@ -678,7 +757,18 @@ class _ChatbotState extends State<Chatbot>
                     ),
                   ),
                 ),
-
+if (showTimer)
+  Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Text(
+      "Time Left : $_timeLeft sec",
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: _timeLeft <= 5 ? Colors.red : Colors.black,
+      ),
+    ),
+  ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -713,7 +803,7 @@ class _ChatbotState extends State<Chatbot>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Column(
+               isAudioLoading?Container():     Column(
                       children: [
                         if (!isLoading)
                           GestureDetector(
@@ -730,7 +820,7 @@ class _ChatbotState extends State<Chatbot>
                           ),
                       ],
                     ),
-                    if (isLoading)
+                    if (isAudioLoading)
                       Container(
                         child: Center(
                           child: SizedBox(
@@ -744,7 +834,7 @@ class _ChatbotState extends State<Chatbot>
                         ),
                       ),
                     const SizedBox(width: 8),
-                    if (!isLoading)
+                    if (!isAudioLoading)
                       GestureDetector(
                         onTap: () async {
                           await flutterTts.stop();
@@ -757,8 +847,104 @@ class _ChatbotState extends State<Chatbot>
 
                             dismissKeyboard();
                             // uploadAudioFile1(null,text,);
-                            uploadQuestionAudioFile(
-                                null, widget.languageName!, text);
+                            // uploadQuestionAudioFile(
+                            //     null, widget.languageName!, text);
+
+setState(() {
+  print("CALL ${text}");
+    final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+ messages.add(ChatMessage(
+            message: text,
+            isUser: true,
+            path: "",
+            time: '$time',
+            
+          ));
+          
+          showTimer=false;
+          _countdownTimer?.cancel();
+          _controller.text="";
+_scrollToBottom();
+});
+
+ print("CALL submit");
+                            final result = await InterviewAnswerApi.submitAnswer(
+  sessionId: widget.sessionID!,
+  questionId: widget.questionID!,
+  questionText: widget.speechdata!,
+  answerText: text,
+);
+
+if (result != null) {
+  
+  print("Score: ${result.score}");
+  print("Reason: ${result.reason}");
+
+                           
+
+
+
+        // final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+
+        
+         
+     setState(() async {
+           final result = await InterviewApiService.getQuestion(sessionId: widget.sessionID!);
+             widget.questionID =result!.questionId.toString();
+         widget.speechdata=result.question.toString();
+         
+         if(result!.status==1)
+         {
+ final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+          messages.add(ChatMessage(
+            message: result!.question,
+            path: "",
+            isUser: false,
+            time: '$time',
+            
+          ));
+            _scrollToBottom();
+
+        speakmessage(result.audio_path, routeGlobalKey.currentContext!);
+        widget.selectedIndex = 1;
+        if (widget.speechdata != null && widget.speechdata!.isNotEmpty) {
+    startTimer();
+  }
+        
+       
+
+        _scrollToBottom();
+         }
+          else{
+          //    final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+          // messages.add(ChatMessage(
+          //   message: result!.question,
+          //   path: "",
+          //   isUser: false,
+          //   time: '$time',
+            
+          // ));
+          //   _scrollToBottom();
+            print("CALL RESULT Here");
+
+
+final resultResp = await InterviewResultApi.getResult(
+  sessionId: widget.sessionID!,
+);
+
+if (resultResp != null) {
+  print("Final %: ${resultResp!.percentage}");
+  showResultDialog(routeGlobalKey.currentContext!,resultResp!.percentage);
+}
+          }
+      
+        //   speakmessage(widget.speechdata!, routeGlobalKey.currentContext!);
+        });
+  
+      
+
+
+}
                             _controller.clear();
                           }
                         },
@@ -1023,8 +1209,17 @@ class _ChatbotState extends State<Chatbot>
             ),
           ),
           TextButton(
-            onPressed: () {
-              _getOutOfApp();
+            onPressed: () async {
+
+final resultResp = await InterviewResultApi.getResult(
+  sessionId: widget.sessionID!,
+);
+
+if (resultResp != null) {
+  print("Final %: ${resultResp!.percentage}");
+  showResultDialog(routeGlobalKey.currentContext!,resultResp!.percentage);
+}
+              // _getOutOfApp();
             },
             child: Text(
               // getExitText(GlobalLists.languageDetected),
@@ -1099,7 +1294,7 @@ class _ChatbotState extends State<Chatbot>
       });
     }
   }
-
+bool isAudioLoading=false;
   Future<void> _stopListening() async {
     if (_isRecording) {
       await _speechToText.stop();
@@ -1117,10 +1312,118 @@ class _ChatbotState extends State<Chatbot>
             : await convertWavToMp3(_audioFilePath!);
 
         if (mp3Path != null) {
-          // uploadAudioFile1(File(mp3Path),_recognizedText); // Your API upload logic
-          uploadQuestionAudioFile(
-              File(mp3Path), widget.languageName!, _recognizedText);
-        } else {
+           dismissKeyboard();
+          setState(() {
+            isAudioLoading=true;
+          });
+ showTimer=false;
+          _countdownTimer?.cancel();
+ final resultAudio = await InterviewAnswerApi.ConvertAduioTOQuestion(
+  
+  audioFile: File(mp3Path)
+);
+print("CONVERT API CALLED");
+print(resultAudio);
+if(resultAudio!=null)
+{
+  
+
+      final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+ messages.add(ChatMessage(
+            message: resultAudio.answer_text,
+            isUser: true,
+            path: "",
+            time: '$time',
+            
+          ));
+ setState(() {
+            isAudioLoading=false;
+          });
+
+                            final result = await InterviewAnswerApi.submitAnswer(
+  sessionId: widget.sessionID!,
+  questionId: widget.questionID!,
+  questionText: widget.speechdata!,
+  answerText: "",
+  audioFile: File(mp3Path)
+);
+_controller.text="";
+if (result != null) {
+  
+  print("Score: ${result.score}");
+  print("Reason: ${result.reason}");
+
+//                              final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+//  messages.add(ChatMessage(
+//             message: result.answer_text,
+//             isUser: true,
+//             path: "",
+//             time: '$time',
+            
+//           ));
+         
+
+
+        // final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+
+        
+        setState(() async {
+           final result = await InterviewApiService.getQuestion(sessionId: widget.sessionID!);
+         widget.questionID =result!.questionId.toString();
+         widget.speechdata=result.question.toString();
+
+         if(result!.status==1)
+         {
+ final time = TimeOfDay.now().format(routeGlobalKey.currentContext!);
+          messages.add(ChatMessage(
+            message: result!.question,
+            path: "",
+            isUser: false,
+            time: '$time',
+            
+          ));
+            _scrollToBottom();
+
+        speakmessage(result.audio_path, routeGlobalKey.currentContext!);
+        widget.selectedIndex = 1;
+        if (widget.speechdata != null && widget.speechdata!.isNotEmpty) {
+    startTimer();
+  }
+        
+       
+
+        _scrollToBottom();
+         }
+          else{
+            
+            _scrollToBottom();
+
+            print("CALL RESULT Here 3");
+
+
+final resultResp = await InterviewResultApi.getResult(
+  sessionId: widget.sessionID!,
+);
+
+if (resultResp != null) {
+  print("Final %: ${resultResp!.percentage}");
+  showResultDialog(routeGlobalKey.currentContext!,resultResp!.percentage);
+}
+          }
+      
+        //   speakmessage(widget.speechdata!, routeGlobalKey.currentContext!);
+        });
+
+
+}
+       
+}
+                               
+        
+        } 
+        
+        
+        else {
           print("❌ Failed to convert to MP3.");
         }
       } else {
@@ -1128,7 +1431,15 @@ class _ChatbotState extends State<Chatbot>
       }
     }
   }
-
+void showResultDialog(BuildContext context, double percentage) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return ResultPopup(percentage: percentage);
+    },
+  );
+}
   Future<String?> convertWavToMp3(String wavPath) async {
     final mp3Path = wavPath.replaceAll('.wav', '.mp3');
 
@@ -1172,6 +1483,7 @@ class _ChatbotState extends State<Chatbot>
         'device_id': GlobalLists.deviceID,
         'device_name': GlobalLists.model,
         'session_id': GlobalLists.sessionID,
+         "is_english":GlobalLists.isEnglishResponse
       });
 
       // if (file != null) {
@@ -1410,4 +1722,161 @@ class ChatMessage {
     this.onYesPressed,
     this.onNoPressed,
   });
+}
+class ResultPopup extends StatefulWidget {
+  final double percentage;
+
+  const ResultPopup({super.key, required this.percentage});
+
+  @override
+  State<ResultPopup> createState() => _ResultPopupState();
+}
+
+class _ResultPopupState extends State<ResultPopup>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  Color getColor() {
+    if (widget.percentage >= 75) return Colors.green;
+    if (widget.percentage >= 50) return Colors.orange;
+    return Colors.red;
+  }
+
+  String getMessage() {
+    if (widget.percentage >= 75) return "Excellent 🎉";
+    if (widget.percentage >= 50) return "Good Job 👍";
+    return "Keep Practicing 💪";
+  }
+
+  IconData getIcon() {
+    if (widget.percentage >= 75) return Icons.emoji_events;
+    if (widget.percentage >= 50) return Icons.thumb_up;
+    return Icons.refresh;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller =
+        AnimationController(vsync: this, duration: Duration(seconds: 2));
+
+    _animation = Tween<double>(begin: 0, end: widget.percentage / 100)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = getColor();
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: EdgeInsets.all(25),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+
+            /// 🏆 Icon
+            Icon(getIcon(), size: 60, color: color),
+
+            const SizedBox(height: 20),
+
+            /// 🎯 Progress
+            AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 140,
+                      height: 140,
+                      child: CircularProgressIndicator(
+                        value: _animation.value,
+                        strokeWidth: 10,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation(color),
+                      ),
+                    ),
+                    Text(
+                      "${widget.percentage.toStringAsFixed(0)}%",
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            /// Message
+            Text(
+              getMessage(),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              "Your interview performance",
+              style: TextStyle(color: Colors.grey),
+            ),
+
+            const SizedBox(height: 25),
+
+            /// 🔘 Home Button ONLY
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(context); // close dialog
+
+                  Navigator.of(routeGlobalKey.currentContext!)
+                      .pushNamed(
+                    SpeechRecordScreen.route,
+                    arguments: GlobalLists.languageDetected,
+                  );
+                },
+                child: Text(
+                  "Home",
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

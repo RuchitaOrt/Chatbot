@@ -4,6 +4,7 @@ import 'package:chat_bot/AllLanguageChatbot.dart';
 import 'package:chat_bot/ChatSessionListPage.dart';
 import 'package:chat_bot/LanguageDashboard.dart';
 import 'package:chat_bot/OnboardingScreenUI.dart';
+import 'package:chat_bot/ResultScreen.dart';
 import 'package:chat_bot/SpeechRecordScreen.dart';
 import 'package:chat_bot/Speech_Page.dart';
 import 'package:chat_bot/chatbot.dart';
@@ -24,6 +25,10 @@ class Routers {
       case Onboardingscreen.route:
         return MaterialPageRoute(
           builder: (_) => Onboardingscreen(),
+        );
+         case ResultScreen.route:
+        return MaterialPageRoute(
+          builder: (_) => ResultScreen(percentage: 100.0,),
         );
       case Chatbot.route:
         return MaterialPageRoute(

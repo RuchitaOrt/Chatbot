@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:chat_bot/LanguageDashboard.dart';
 import 'package:chat_bot/OnboardingScreenUI.dart';
+import 'package:chat_bot/ResultScreen.dart';
 import 'package:chat_bot/SpeechRecordScreen.dart';
 import 'package:chat_bot/Speech_Page.dart';
 import 'package:chat_bot/chatbot.dart';
@@ -56,7 +57,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Sita AI',
+        title: 'TESTBOT',
         debugShowCheckedModeBanner: false,
         navigatorKey: routeGlobalKey,
        theme: ThemeData(
@@ -69,7 +70,8 @@ class _MyAppState extends State<MyApp> {
           // OnboardingScreenUI.route,
         // LanguageDashboard.route,
         //  Onboardingscreen.route,
-      SpeechRecordScreen.route,
+      // ResultScreen.route,
+       SpeechRecordScreen.route,
         onGenerateRoute: Routers.generateRoute,
       );
     

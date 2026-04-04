@@ -15,7 +15,9 @@ class GlobalLists {
   static String model = "";
   static String version = "";
   static String sessionID = "";
-  static String isbhashini = "0";
+  static String isbhashini = "0";//0 means open AI //1 means bhashani
+
+  static bool isEnglishResponse = true; // default English
 }
 
 Future<String> getCachedAudioPath(String message, String remoteUrl) async {

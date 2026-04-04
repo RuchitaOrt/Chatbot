@@ -16,7 +16,7 @@
         android:hardwareAccelerated="true"
          android:usesCleartextTraffic="true"
         android:icon="@mipmap/sita_launcher"
-        android:label="SITA AI">
+        android:label="TESTBOT">
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
