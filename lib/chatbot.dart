@@ -16,7 +16,6 @@ import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -294,7 +293,8 @@ class _ChatbotState extends State<Chatbot>
         'language_name_text': "",
         //  GlobalLists.languageDetected,
         'session_id': GlobalLists.sessionID,
-        "bhashini": GlobalLists.isbhashini
+        "bhashini": GlobalLists.isbhashini,
+        "is_english":GlobalLists.isEnglishResponse
       });
 
       if (file != null) {
@@ -562,6 +562,7 @@ class _ChatbotState extends State<Chatbot>
                 )
               ],
             ),
+
             // centerTitle: true,
           ),
           body: Column(
@@ -1172,6 +1173,7 @@ class _ChatbotState extends State<Chatbot>
         'device_id': GlobalLists.deviceID,
         'device_name': GlobalLists.model,
         'session_id': GlobalLists.sessionID,
+         "is_english":GlobalLists.isEnglishResponse
       });
 
       // if (file != null) {

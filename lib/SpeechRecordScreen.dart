@@ -526,6 +526,8 @@ String getHoldMicText(String langCode, bool isRecording) {
  
   return holdMicTranslations[langCode] ?? 'Hold the microphone to speak.';
 }
+
+
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     return WillPopScope(
@@ -541,6 +543,83 @@ String getHoldMicText(String langCode, bool isRecording) {
         appBar: AppBar(
           backgroundColor: const Color(0xffF9F7F0),
           automaticallyImplyLeading: false,
+                      actions: [
+                        Container(
+  padding: EdgeInsets.all(2),
+  decoration: BoxDecoration(
+    color: Colors.grey.shade300,
+    borderRadius: BorderRadius.circular(20),
+  ),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      GestureDetector(
+        onTap: () {
+          setState(() => GlobalLists.isEnglishResponse = false);
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: !GlobalLists.isEnglishResponse ? Color(0xff2B3E2B) : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            "Regional",
+            style: TextStyle(
+              color: !GlobalLists.isEnglishResponse ? Colors.white : Colors.black,
+              fontSize: 11,
+            ),
+          ),
+        ),
+      ),
+      GestureDetector(
+        onTap: () {
+          setState(() => GlobalLists.isEnglishResponse = true);
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: GlobalLists.isEnglishResponse ? Color(0xff2B3E2B) : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            "English",
+            style: TextStyle(
+              color: GlobalLists.isEnglishResponse ? Colors.white : Colors.black,
+              fontSize: 11,
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+),
+  // Row(
+  //   children: [
+  //     Text(
+  //       isEnglishResponse ? "English" : "Regional",
+  //       style: TextStyle(
+  //         color: Color(0xff2b3e2b),
+  //         fontSize: 12,
+  //         fontWeight: FontWeight.w500,
+  //       ),
+  //     ),
+  //     Transform.scale(
+  //     scale: 0.7, // 🔥 reduce size (0.6 - 0.8 looks good)
+  //     child: Switch(
+  //       value: isEnglishResponse,
+  //       activeColor: Color(0xff2B3E2B),
+  //       onChanged: (value) {
+  //         setState(() {
+  //           isEnglishResponse = value;
+  //         });
+  //       },
+  //     ),
+  //   ),
+  //   ],
+  // ),
+  SizedBox(width: 8),
+],
           title: Row(
             children: [
               Image.asset(
@@ -765,6 +844,8 @@ String getHoldMicText(String langCode, bool isRecording) {
       // GlobalLists.languageDetected;
       request.fields['session_id'] = "";
        request.fields['bhashini']=GlobalLists.isbhashini;
+ request.fields['is_english']=GlobalLists.isEnglishResponse.toString();
+        
    
       print(text);
       print(request.fields);

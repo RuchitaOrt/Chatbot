@@ -1,0 +1,46 @@
+[
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.example.chat_bot.app-main-48:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/mipmap-hdpi_sita_launcher.png.flat",
+        "source": "com.example.chat_bot.app-main-48:/mipmap-hdpi/sita_launcher.png"
+    },
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/mipmap-xhdpi_sita_launcher.png.flat",
+        "source": "com.example.chat_bot.app-main-48:/mipmap-xhdpi/sita_launcher.png"
+    },
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.example.chat_bot.app-main-48:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.example.chat_bot.app-main-48:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/mipmap-mdpi_sita_launcher.png.flat",
+        "source": "com.example.chat_bot.app-main-48:/mipmap-mdpi/sita_launcher.png"
+    },
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/mipmap-xxxhdpi_sita_launcher.png.flat",
+        "source": "com.example.chat_bot.app-main-48:/mipmap-xxxhdpi/sita_launcher.png"
+    },
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/drawable-v21_launch_background.xml.flat",
+        "source": "com.example.chat_bot.app-main-48:/drawable-v21/launch_background.xml"
+    },
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/mipmap-xxhdpi_sita_launcher.png.flat",
+        "source": "com.example.chat_bot.app-main-48:/mipmap-xxhdpi/sita_launcher.png"
+    },
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.example.chat_bot.app-main-48:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.chat_bot.app-debug-46:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.example.chat_bot.app-main-48:/mipmap-xxxhdpi/ic_launcher.png"
+    }
+]
